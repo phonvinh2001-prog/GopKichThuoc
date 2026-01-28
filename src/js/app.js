@@ -387,24 +387,92 @@ class App {
    */
   renderItems() {
     const container = document.getElementById("itemsList");
-
     if (this.items.length === 0) {
-      container.innerHTML = "";
+      container.innerHTML = `<div class="empty-list">Chưa có chi tiết nào</div>`;
       return;
     }
 
     container.innerHTML = this.items
       .map(
         (item, index) => `
-            <div class="item-row">
-                <div class="item-info">
-                    <strong>${item.length}mm</strong> × ${item.quantity} thanh
-                </div>
-                <button class="item-delete" onclick="app.deleteItem(${index})">Xóa</button>
+        <div class="item-row">
+            <div class="item-info">
+                <strong>${item.length}mm</strong> × ${item.quantity} thanh
             </div>
-        `,
+            <div class="item-actions">
+                <button class="item-edit" onclick="app.editItem(${index})" title="Sửa">✏️</button>
+                <button class="item-delete" onclick="app.deleteItem(${index})" title="Xóa">🗑️</button>
+            </div>
+        </div>
+    `,
       )
       .join("");
+  }
+
+  /**
+   * Render danh sách stocks
+   */
+  renderStocks() {
+    const container = document.getElementById("stockList");
+    const stockList = document.getElementById("stockLength"); // Dùng để check empty? No.
+
+    // Filter stocks nhập tay (isExisting = true/false logic cũ là stock nhập từ kho?)
+    // Ở đây ta hiển thị stocks hiện có trong config/session
+    if (this.stocks.length === 0) {
+      container.innerHTML = `<div class="empty-list">Chưa có thanh tồn kho</div>`;
+      return;
+    }
+
+    container.innerHTML = this.stocks
+      .map(
+        (stock, index) => `
+        <div class="item-row">
+            <div class="item-info">
+                <strong>${stock.length}mm</strong> × ${stock.quantity} thanh
+                ${stock.note ? `<span class="note">(${stock.note})</span>` : ""}
+            </div>
+            <div class="item-actions">
+                <button class="item-edit" onclick="app.editStock(${index})" title="Sửa">✏️</button>
+                <button class="item-delete" onclick="app.deleteStock(${index})" title="Xóa">🗑️</button>
+            </div>
+        </div>
+    `,
+      )
+      .join("");
+  }
+
+  /**
+   * Chỉnh sửa stock
+   */
+  editStock(index) {
+    if (index < 0 || index >= this.stocks.length) return;
+    const stock = this.stocks[index];
+
+    let newLength = prompt(
+      `Sửa Chiều Dài Stock (hiện tại: ${stock.length}mm):`,
+      stock.length,
+    );
+    if (newLength === null) return;
+    if (newLength.trim() === "") newLength = stock.length;
+
+    let newQuantity = prompt(
+      `Sửa Số Lượng Stock (hiện tại: ${stock.quantity} thanh):`,
+      stock.quantity,
+    );
+    if (newQuantity === null) return;
+    if (newQuantity.trim() === "") newQuantity = stock.quantity;
+
+    const l = parseFloat(newLength);
+    const q = parseInt(newQuantity);
+
+    if (!l || !q || l <= 0 || q <= 0) {
+      alert("Giá trị không hợp lệ!");
+      return;
+    }
+
+    this.stocks[index] = { ...stock, length: l, quantity: q };
+    this.renderStocks();
+    this.updateConfig(); // Save if specific logic needs
   }
 
   /**
