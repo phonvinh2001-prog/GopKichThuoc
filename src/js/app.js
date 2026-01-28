@@ -296,18 +296,30 @@ class App {
    * Chỉnh sửa item
    */
   editItem(index) {
+    if (index < 0 || index >= this.items.length) return;
     const item = this.items[index];
-    const newLength = prompt("Nhập chiều dài mới:", item.length);
-    if (newLength === null) return; // Cancel
 
-    const newQuantity = prompt("Nhập số lượng mới:", item.quantity);
-    if (newQuantity === null) return; // Cancel
+    // Prompt Length
+    let newLength = prompt(
+      `Sửa Chiều Dài (hiện tại: ${item.length}mm):`,
+      item.length,
+    );
+    if (newLength === null) return; // User cancel entire operation
+    if (newLength.trim() === "") newLength = item.length; // Keep old if empty
+
+    // Prompt Quantity
+    let newQuantity = prompt(
+      `Sửa Số Lượng (hiện tại: ${item.quantity} thanh):`,
+      item.quantity,
+    );
+    if (newQuantity === null) return; // User cancel
+    if (newQuantity.trim() === "") newQuantity = item.quantity; // Keep old if empty
 
     const l = parseFloat(newLength);
     const q = parseInt(newQuantity);
 
     if (!l || !q || l <= 0 || q <= 0) {
-      alert("Giá trị không hợp lệ!");
+      alert("Giá trị không hợp lệ! Vui lòng nhập số dương.");
       return;
     }
 
@@ -752,9 +764,9 @@ class App {
   }
 }
 
-// Khởi tạo app khi DOM ready
-let app;
+// Khởi tạo ứng dụng
 document.addEventListener("DOMContentLoaded", () => {
-  app = new App();
+  const app = new App();
+  window.app = app;
   app.init();
 });
