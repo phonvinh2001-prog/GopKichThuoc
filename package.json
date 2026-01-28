@@ -1,0 +1,24 @@
+{
+  "name": "gop-kich-thuoc-nhom",
+  "version": "1.0.0",
+  "description": "Hệ thống tối ưu hóa cắt nhôm - Tính toán kích thước phôi nhôm tối ưu",
+  "main": "index.html",
+  "scripts": {
+    "dev": "live-server --port=3000 --open=index.html",
+    "start": "live-server --port=3000 --open=index.html"
+  },
+  "keywords": [
+    "aluminum",
+    "cutting",
+    "optimization",
+    "stock-cutting"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}
