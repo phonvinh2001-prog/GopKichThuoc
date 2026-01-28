@@ -49,11 +49,12 @@ class CuttingOptimizer {
       usedStocks.push(...stockResult.usedStocks);
     }
 
-    // Nếu còn items, tìm kích thước tối ưu
+    // Nếu còn items, tìm kích thước tối ưu (Sử dụng Multi-Stock)
     let bestResult = null;
 
     if (remainingItems.length > 0) {
-      bestResult = this.findOptimalStockLength(remainingItems, config);
+      // Sử dụng thuật toán đa kích thước để tối ưu triệt để
+      bestResult = this.multiStockOptimization(remainingItems, config);
     }
 
     // Kết hợp kết quả
@@ -125,9 +126,17 @@ class CuttingOptimizer {
   /**
    * Tìm kích thước phôi tối ưu bằng Global Search
    */
+  /**
+   * Tìm kích thước phôi tối ưu bằng Global Search
+   */
   findOptimalStockLength(items, config) {
     let bestResult = null;
-    let bestEfficiency = 0;
+    let bestEfficiency = -1; // Khởi tạo -1 để đảm bảo có kết quả đầu tiên
+
+    // Sort items để đảm bảo First Fit Decreasing hoạt động đúng
+    // (Copy để không ảnh hưởng mảng gốc)
+    const sortedItems = [...items].sort((a, b) => b - a);
+    const maxItemLength = sortedItems[0];
 
     // Thử tất cả kích thước từ min đến max với bước nhảy
     for (
@@ -135,7 +144,15 @@ class CuttingOptimizer {
       stockLength <= config.maxLength;
       stockLength += config.stepSize
     ) {
-      const result = this.firstFitDecreasing(items, stockLength, config.kerf);
+      // 🛑 QUAN TRỌNG: Bỏ qua nếu kích thước phôi nhỏ hơn chi tiết lớn nhất
+      // Ngăn chặn lỗi "Phế liệu âm" và chọn sai stock ảo
+      if (stockLength < maxItemLength) continue;
+
+      const result = this.firstFitDecreasing(
+        sortedItems,
+        stockLength,
+        config.kerf,
+      );
 
       // Tính hiệu suất
       const totalUsed = result.stocks.reduce(
@@ -143,20 +160,29 @@ class CuttingOptimizer {
         0,
       );
       const totalLength = result.stocks.length * stockLength;
-      const efficiency = (totalUsed / totalLength) * 100;
+
+      // Tính waste chuẩn xác (dựa trên remaining thực tế)
+      const totalWaste = result.stocks.reduce(
+        (sum, stock) => sum + stock.remaining,
+        0,
+      );
+      const totalUsedWithKerf = totalLength - totalWaste;
+
+      const efficiency = (totalUsedWithKerf / totalLength) * 100;
 
       result.efficiency = efficiency;
       result.totalUsed = totalUsed;
       result.totalLength = totalLength;
-      result.totalWaste = totalLength - totalUsed;
+      result.totalWaste = totalWaste;
       result.stockLength = stockLength;
 
       // Chọn phương án tốt nhất
       // Ưu tiên: Hiệu suất cao > Số thanh ít
       if (
         efficiency > bestEfficiency ||
-        (efficiency === bestEfficiency &&
-          result.stocks.length < bestResult.stocks.length)
+        (Math.abs(efficiency - bestEfficiency) < 0.01 && // So sánh float an toàn
+          result.stocks.length <
+            (bestResult ? bestResult.stocks.length : Infinity))
       ) {
         bestEfficiency = efficiency;
         bestResult = result;
@@ -359,12 +385,79 @@ class CuttingOptimizer {
    * Multi-Stock Optimization (Nâng cao - Phase 2)
    * Thử kết hợp nhiều kích thước khác nhau
    */
+  /**
+   * Multi-Stock Optimization (Thuật toán Iterative Residual)
+   * Tự động kết hợp nhiều kích thước phôi để tối ưu hóa
+   */
   multiStockOptimization(items, config) {
-    // TODO: Implement trong phase 2
-    // Phân nhóm items theo kích thước
-    // Tìm kích thước tối ưu cho từng nhóm
-    // Kết hợp các phương án
-    console.log("Multi-stock optimization - Coming soon");
+    let remainingItems = [...items];
+    const finalStocks = [];
+    let iterations = 0;
+    const MAX_ITERATIONS = 5; // Tránh lặp vô hạn
+
+    while (remainingItems.length > 0 && iterations < MAX_ITERATIONS) {
+      iterations++;
+
+      // 1. Tìm kích thước tốt nhất cho lô hàng hiện tại
+      const bestResult = this.findOptimalStockLength(remainingItems, config);
+
+      // Nếu không tìm được, break
+      if (!bestResult) break;
+
+      // 2. Lọc ra các thanh "Tốt" (Good Stocks)
+      // Tiêu chí: Phế liệu <= maxWaste HOẶC Hiệu suất thanh > 90%
+      const goodStocks = bestResult.stocks.filter((stock) => {
+        const wastePercent = stock.remaining / stock.length;
+        return stock.remaining <= config.maxWaste || wastePercent < 0.1;
+      });
+
+      // 3. Xử lý trường hợp không có thanh nào đạt chuẩn
+      if (goodStocks.length === 0) {
+        // Nếu đã thử tối ưu nhưng tất cả đều "tệ", đành chấp nhận kết quả tốt nhất hiện có
+        // (Đây là Global Optimization tốt nhất cho lô này rồi)
+        finalStocks.push(...bestResult.stocks);
+        remainingItems = [];
+        break;
+      }
+
+      // 4. Chấp nhận các thanh tốt
+      finalStocks.push(...goodStocks);
+
+      // 5. Lấy các item từ các thanh "Tệ" để tối ưu lại ở vòng lặp sau
+      const badStocks = bestResult.stocks.filter((stock) => {
+        const wastePercent = stock.remaining / stock.length;
+        return stock.remaining > config.maxWaste && wastePercent >= 0.1;
+      });
+
+      const nextItems = [];
+      badStocks.forEach((stock) => {
+        nextItems.push(...stock.cuts);
+      });
+
+      remainingItems = nextItems;
+    }
+
+    // Nếu vẫn còn hàng sau khi hết số vòng lặp tối đa
+    if (remainingItems.length > 0) {
+      const lastResult = this.findOptimalStockLength(remainingItems, config);
+      finalStocks.push(...lastResult.stocks);
+    }
+
+    return {
+      stocks: finalStocks,
+      // Nếu chỉ có 1 loại kích thước, trả về kích thước đó. Nếu nhiều, trả về "Đa kích thước"
+      stockLength: this.detectStockLengthType(finalStocks),
+    };
+  }
+
+  /**
+   * Helper để xác định loại kích thước kết quả
+   */
+  detectStockLengthType(stocks) {
+    if (stocks.length === 0) return 0;
+    const firstLen = stocks[0].length;
+    const isSingle = stocks.every((s) => s.length === firstLen);
+    return isSingle ? firstLen : "Đa kích thước"; // String này sẽ hiển thị ở UI
   }
 }
 
