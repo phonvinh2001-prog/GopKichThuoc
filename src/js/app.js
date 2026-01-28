@@ -1,0 +1,504 @@
+/**
+ * App - Logic chính của ứng dụng
+ */
+
+class App {
+  constructor() {
+    this.optimizer = new CuttingOptimizer();
+    this.storage = new StorageManager();
+    this.exporter = new ExportManager();
+
+    this.items = [];
+    this.stocks = [];
+    this.config = {
+      kerf: 5,
+      maxWaste: 500,
+      minLength: 3500,
+      maxLength: 6000,
+      stepSize: 100,
+    };
+
+    this.currentResult = null;
+  }
+
+  /**
+   * Khởi tạo ứng dụng
+   */
+  init() {
+    console.log("🚀 Khởi động ứng dụng...");
+
+    // Load dữ liệu từ LocalStorage
+    this.loadFromStorage();
+
+    // Render UI
+    this.renderItems();
+    this.renderStocks();
+    this.updateConfigUI();
+
+    // Bắt đầu auto-save
+    this.storage.startAutoSave(() => this.getCurrentData());
+
+    // Setup event listeners
+    this.setupEventListeners();
+
+    console.log("✅ Ứng dụng đã sẵn sàng!");
+  }
+
+  /**
+   * Load dữ liệu từ storage
+   */
+  loadFromStorage() {
+    const data = this.storage.loadData();
+    this.items = data.items || [];
+    this.stocks = data.stocks || [];
+    this.config = data.config || this.config;
+  }
+
+  /**
+   * Lấy dữ liệu hiện tại để lưu
+   */
+  getCurrentData() {
+    return {
+      items: this.items,
+      stocks: this.stocks,
+      config: this.config,
+    };
+  }
+
+  /**
+   * Setup event listeners
+   */
+  setupEventListeners() {
+    // Enter key để thêm item
+    document.getElementById("itemLength").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") this.addItem();
+    });
+    document
+      .getElementById("itemQuantity")
+      .addEventListener("keypress", (e) => {
+        if (e.key === "Enter") this.addItem();
+      });
+
+    // Enter key để thêm stock
+    document.getElementById("stockLength").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") this.addStock();
+    });
+    document
+      .getElementById("stockQuantity")
+      .addEventListener("keypress", (e) => {
+        if (e.key === "Enter") this.addStock();
+      });
+
+    // Lưu config khi thay đổi
+    ["kerf", "maxWaste", "minLength", "maxLength", "stepSize"].forEach((id) => {
+      document.getElementById(id).addEventListener("change", () => {
+        this.updateConfig();
+      });
+    });
+  }
+
+  /**
+   * Cập nhật config từ UI
+   */
+  updateConfig() {
+    this.config.kerf = parseFloat(document.getElementById("kerf").value) || 5;
+    this.config.maxWaste =
+      parseFloat(document.getElementById("maxWaste").value) || 500;
+    this.config.minLength =
+      parseFloat(document.getElementById("minLength").value) || 3500;
+    this.config.maxLength =
+      parseFloat(document.getElementById("maxLength").value) || 6000;
+    this.config.stepSize =
+      parseFloat(document.getElementById("stepSize").value) || 100;
+  }
+
+  /**
+   * Cập nhật UI config
+   */
+  updateConfigUI() {
+    document.getElementById("kerf").value = this.config.kerf;
+    document.getElementById("maxWaste").value = this.config.maxWaste;
+    document.getElementById("minLength").value = this.config.minLength;
+    document.getElementById("maxLength").value = this.config.maxLength;
+    document.getElementById("stepSize").value = this.config.stepSize;
+  }
+
+  /**
+   * Thêm item
+   */
+  addItem() {
+    const length = parseFloat(document.getElementById("itemLength").value);
+    const quantity = parseInt(document.getElementById("itemQuantity").value);
+
+    if (!length || !quantity || length <= 0 || quantity <= 0) {
+      alert("Vui lòng nhập chiều dài và số lượng hợp lệ");
+      return;
+    }
+
+    this.items.push({ length, quantity });
+    this.renderItems();
+
+    // Clear inputs
+    document.getElementById("itemLength").value = "";
+    document.getElementById("itemQuantity").value = "";
+    document.getElementById("itemLength").focus();
+  }
+
+  /**
+   * Xóa item
+   */
+  deleteItem(index) {
+    this.items.splice(index, 1);
+    this.renderItems();
+  }
+
+  /**
+   * Render danh sách items
+   */
+  renderItems() {
+    const container = document.getElementById("itemsList");
+
+    if (this.items.length === 0) {
+      container.innerHTML = "";
+      return;
+    }
+
+    container.innerHTML = this.items
+      .map(
+        (item, index) => `
+            <div class="item-row">
+                <div class="item-info">
+                    <strong>${item.length}mm</strong> × ${item.quantity} thanh
+                </div>
+                <button class="item-delete" onclick="app.deleteItem(${index})">Xóa</button>
+            </div>
+        `,
+      )
+      .join("");
+  }
+
+  /**
+   * Thêm stock (tồn kho)
+   */
+  addStock() {
+    const length = parseFloat(document.getElementById("stockLength").value);
+    const quantity = parseInt(document.getElementById("stockQuantity").value);
+
+    if (!length || !quantity || length <= 0 || quantity <= 0) {
+      alert("Vui lòng nhập chiều dài và số lượng hợp lệ");
+      return;
+    }
+
+    this.stocks.push({ length, quantity });
+    this.renderStocks();
+
+    // Clear inputs
+    document.getElementById("stockLength").value = "";
+    document.getElementById("stockQuantity").value = "";
+    document.getElementById("stockLength").focus();
+  }
+
+  /**
+   * Xóa stock
+   */
+  deleteStock(index) {
+    this.stocks.splice(index, 1);
+    this.renderStocks();
+  }
+
+  /**
+   * Render danh sách stocks
+   */
+  renderStocks() {
+    const container = document.getElementById("stockList");
+
+    if (this.stocks.length === 0) {
+      container.innerHTML = "";
+      return;
+    }
+
+    container.innerHTML = this.stocks
+      .map(
+        (stock, index) => `
+            <div class="item-row">
+                <div class="item-info">
+                    <strong>${stock.length}mm</strong> × ${stock.quantity} thanh
+                </div>
+                <button class="item-delete" onclick="app.deleteStock(${index})">Xóa</button>
+            </div>
+        `,
+      )
+      .join("");
+  }
+
+  /**
+   * Tính toán
+   */
+  async calculate() {
+    // Validate
+    if (this.items.length === 0) {
+      alert("Vui lòng nhập danh sách chi tiết");
+      return;
+    }
+
+    // Cập nhật config
+    this.updateConfig();
+
+    // Validate config
+    if (this.config.minLength >= this.config.maxLength) {
+      alert("Min phải nhỏ hơn Max");
+      return;
+    }
+
+    // Show loading
+    this.showLoading(true);
+
+    try {
+      // Delay nhỏ để UI update
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Tính toán
+      const result = this.optimizer.optimize(
+        this.items,
+        this.config,
+        this.stocks,
+      );
+      this.currentResult = result;
+
+      // Lưu vào lịch sử
+      this.storage.saveToHistory(result);
+
+      // Render kết quả
+      this.renderResults(result);
+
+      // Enable export buttons
+      document.getElementById("btnExportExcel").disabled = false;
+      document.getElementById("btnPrint").disabled = false;
+    } catch (error) {
+      console.error("Lỗi khi tính toán:", error);
+      alert(`Lỗi: ${error.message}`);
+    } finally {
+      this.showLoading(false);
+    }
+  }
+
+  /**
+   * Hiển thị loading
+   */
+  showLoading(show) {
+    document.getElementById("loadingOverlay").style.display = show
+      ? "flex"
+      : "none";
+  }
+
+  /**
+   * Render kết quả
+   */
+  renderResults(result) {
+    // Ẩn empty state
+    document.querySelector(".empty-state").style.display = "none";
+
+    // Render sơ đồ cắt
+    this.renderCuttingDiagram(result.stocks);
+
+    // Render bảng tổng hợp
+    this.renderSummaryTable(result.summary);
+
+    // Render thống kê
+    this.renderStats(result);
+
+    // Render warnings
+    this.renderWarnings(result.warnings);
+  }
+
+  /**
+   * Render sơ đồ cắt
+   */
+  renderCuttingDiagram(stocks) {
+    const container = document.getElementById("cuttingDiagram");
+    container.style.display = "block";
+
+    container.innerHTML = stocks
+      .map((stock, index) => {
+        const usedLength = stock.cuts.reduce((sum, cut) => sum + cut, 0);
+        const usedPercent = (usedLength / stock.length) * 100;
+        const wastePercent = (stock.remaining / stock.length) * 100;
+
+        let html = `
+                <div class="stock-item">
+                    <div class="stock-header">
+                        Thanh #${index + 1}: ${stock.length}mm 
+                        ${stock.isExisting ? "(Tồn kho)" : "(Đặt mới)"}
+                        - Phế liệu: ${stock.remaining.toFixed(1)}mm
+                    </div>
+                    <div class="stock-bar">
+            `;
+
+        let currentPos = 0;
+        stock.cuts.forEach((cut, cutIndex) => {
+          const cutPercent = (cut / stock.length) * 100;
+          html += `
+                    <div class="cut-segment" style="left: ${currentPos}%; width: ${cutPercent}%">
+                        ${cut}mm
+                    </div>
+                `;
+          currentPos += cutPercent;
+        });
+
+        if (stock.remaining > 0) {
+          html += `
+                    <div class="waste-segment" style="width: ${wastePercent}%"></div>
+                `;
+        }
+
+        html += `
+                    </div>
+                </div>
+            `;
+
+        return html;
+      })
+      .join("");
+  }
+
+  /**
+   * Render bảng tổng hợp
+   */
+  renderSummaryTable(summary) {
+    const container = document.getElementById("summaryTable");
+    container.style.display = "block";
+
+    container.innerHTML = `
+            <h3>📋 Tổng hợp đặt hàng</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Kích thước (mm)</th>
+                        <th>Số lượng</th>
+                        <th>Ghi chú</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${summary
+                      .map(
+                        (item) => `
+                        <tr>
+                            <td><strong>${item.length}mm</strong></td>
+                            <td>${item.quantity} thanh</td>
+                            <td>${item.isExisting ? "🏪 Tồn kho" : "🆕 Đặt mới"}</td>
+                        </tr>
+                    `,
+                      )
+                      .join("")}
+                </tbody>
+            </table>
+        `;
+  }
+
+  /**
+   * Render thống kê
+   */
+  renderStats(result) {
+    document.getElementById("efficiency").textContent = `${result.efficiency}%`;
+    document.getElementById("totalStocks").textContent =
+      `${result.totalStocks} thanh`;
+    document.getElementById("totalWaste").textContent =
+      `${result.totalWaste.toFixed(0)} mm`;
+    document.getElementById("optimalLength").textContent = result.optimalLength
+      ? `${result.optimalLength} mm`
+      : "N/A";
+  }
+
+  /**
+   * Render warnings
+   */
+  renderWarnings(warnings) {
+    const container = document.getElementById("warningsArea");
+
+    if (!warnings || warnings.length === 0) {
+      container.style.display = "none";
+      return;
+    }
+
+    container.style.display = "block";
+    container.innerHTML = `
+            <h4>⚠️ Cảnh báo</h4>
+            ${warnings
+              .map(
+                (warning) => `
+                <div class="warning-item">
+                    <span>${warning.type === "warning" ? "⚠️" : "ℹ️"}</span>
+                    <span>${warning.message}</span>
+                </div>
+            `,
+              )
+              .join("")}
+        `;
+  }
+
+  /**
+   * Xuất Excel
+   */
+  exportExcel() {
+    if (!this.currentResult) {
+      alert("Chưa có kết quả để xuất");
+      return;
+    }
+
+    this.exporter.exportExcel(this.currentResult);
+  }
+
+  /**
+   * In ấn
+   */
+  printResults() {
+    if (!this.currentResult) {
+      alert("Chưa có kết quả để in");
+      return;
+    }
+
+    this.exporter.printResults();
+  }
+
+  /**
+   * Xóa tất cả
+   */
+  clearAll() {
+    if (!confirm("Bạn có chắc muốn xóa tất cả dữ liệu?")) {
+      return;
+    }
+
+    this.items = [];
+    this.stocks = [];
+    this.currentResult = null;
+
+    this.renderItems();
+    this.renderStocks();
+
+    // Reset result area
+    document.querySelector(".empty-state").style.display = "block";
+    document.getElementById("cuttingDiagram").style.display = "none";
+    document.getElementById("summaryTable").style.display = "none";
+    document.getElementById("warningsArea").style.display = "none";
+
+    // Reset stats
+    document.getElementById("efficiency").textContent = "--%";
+    document.getElementById("totalStocks").textContent = "--";
+    document.getElementById("totalWaste").textContent = "-- mm";
+    document.getElementById("optimalLength").textContent = "-- mm";
+
+    // Disable export buttons
+    document.getElementById("btnExportExcel").disabled = true;
+    document.getElementById("btnPrint").disabled = true;
+
+    // Clear storage
+    this.storage.clearData();
+  }
+}
+
+// Khởi tạo app khi DOM ready
+let app;
+document.addEventListener("DOMContentLoaded", () => {
+  app = new App();
+  app.init();
+});

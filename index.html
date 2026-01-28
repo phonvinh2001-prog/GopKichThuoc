@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tối Ưu Hóa Cắt Nhôm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="src/css/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <header class="header">
+        <h1>🔧 Tối Ưu Hóa Cắt Nhôm</h1>
+        <p class="subtitle">
+          Tính toán kích thước phôi nhôm tối ưu - Giảm thiểu phế liệu
+        </p>
+      </header>
+
+      <!-- Main Content -->
+      <div class="main-grid">
+        <!-- Left Panel: Input Form -->
+        <section class="panel input-panel">
+          <h2>📝 Nhập Liệu</h2>
+
+          <!-- Danh sách chi tiết -->
+          <div class="form-group">
+            <label>Danh sách chi tiết</label>
+            <div class="item-input-row">
+              <input
+                type="number"
+                id="itemLength"
+                placeholder="Chiều dài (mm)"
+                min="1"
+              />
+              <input
+                type="number"
+                id="itemQuantity"
+                placeholder="Số lượng"
+                min="1"
+              />
+              <button class="btn btn-add" onclick="app.addItem()">
+                + Thêm
+              </button>
+            </div>
+            <div id="itemsList" class="items-list"></div>
+          </div>
+
+          <!-- Cài đặt -->
+          <div class="settings-section">
+            <h3>⚙️ Cài đặt</h3>
+
+            <div class="form-group">
+              <label>Mạch cắt (mm)</label>
+              <input type="number" id="kerf" value="5" min="0" step="0.1" />
+              <small>Độ dày lưỡi cưa</small>
+            </div>
+
+            <div class="form-group">
+              <label>Phế liệu tối đa cho phép (mm)</label>
+              <input type="number" id="maxWaste" value="500" min="0" />
+              <small>Ngưỡng cảnh báo phế liệu</small>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Min (mm)</label>
+                <input type="number" id="minLength" value="3500" min="1000" />
+              </div>
+              <div class="form-group">
+                <label>Max (mm)</label>
+                <input type="number" id="maxLength" value="6000" min="1000" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Bước nhảy (mm)</label>
+              <input type="number" id="stepSize" value="100" min="10" />
+              <small>Khoảng cách giữa các kích thước thử</small>
+            </div>
+          </div>
+
+          <!-- Quản lý tồn kho -->
+          <div class="inventory-section">
+            <h3>📦 Tồn kho (Thanh cụt)</h3>
+            <div class="item-input-row">
+              <input
+                type="number"
+                id="stockLength"
+                placeholder="Chiều dài (mm)"
+                min="1"
+              />
+              <input
+                type="number"
+                id="stockQuantity"
+                placeholder="Số lượng"
+                min="1"
+              />
+              <button class="btn btn-secondary" onclick="app.addStock()">
+                + Thêm tồn
+              </button>
+            </div>
+            <div id="stockList" class="items-list"></div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons">
+            <button class="btn btn-primary" onclick="app.calculate()">
+              🧮 Tính toán
+            </button>
+            <button class="btn btn-secondary" onclick="app.clearAll()">
+              🗑️ Xóa tất cả
+            </button>
+          </div>
+        </section>
+
+        <!-- Middle Panel: Results -->
+        <section class="panel result-panel">
+          <h2>📊 Kết quả</h2>
+          <div id="resultArea" class="result-area">
+            <div class="empty-state">
+              <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+                <circle
+                  cx="60"
+                  cy="60"
+                  r="50"
+                  stroke="#e0e0e0"
+                  stroke-width="4"
+                />
+                <path
+                  d="M40 60h40M60 40v40"
+                  stroke="#e0e0e0"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <p>Nhập dữ liệu và nhấn "Tính toán" để xem kết quả</p>
+            </div>
+          </div>
+
+          <!-- Cutting Diagram -->
+          <div
+            id="cuttingDiagram"
+            class="cutting-diagram"
+            style="display: none"
+          ></div>
+
+          <!-- Summary Table -->
+          <div
+            id="summaryTable"
+            class="summary-table"
+            style="display: none"
+          ></div>
+        </section>
+
+        <!-- Right Panel: Statistics & Actions -->
+        <section class="panel stats-panel">
+          <h2>📈 Thống kê</h2>
+          <div id="statsArea" class="stats-area">
+            <div class="stat-card">
+              <div class="stat-label">Hiệu suất</div>
+              <div class="stat-value" id="efficiency">--%</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Tổng phôi cần đặt</div>
+              <div class="stat-value" id="totalStocks">--</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Tổng phế liệu</div>
+              <div class="stat-value" id="totalWaste">-- mm</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Kích thước tối ưu</div>
+              <div class="stat-value" id="optimalLength">-- mm</div>
+            </div>
+          </div>
+
+          <!-- Efficiency Chart -->
+          <div class="chart-container">
+            <canvas id="efficiencyChart"></canvas>
+          </div>
+
+          <!-- Export Actions -->
+          <div class="export-section">
+            <h3>📤 Xuất dữ liệu</h3>
+            <button
+              class="btn btn-success"
+              onclick="app.exportExcel()"
+              disabled
+              id="btnExportExcel"
+            >
+              📄 Xuất Excel
+            </button>
+            <button
+              class="btn btn-secondary"
+              onclick="app.printResults()"
+              disabled
+              id="btnPrint"
+            >
+              🖨️ In ấn
+            </button>
+          </div>
+
+          <!-- Warnings -->
+          <div
+            id="warningsArea"
+            class="warnings-area"
+            style="display: none"
+          ></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none">
+      <div class="spinner"></div>
+      <p>Đang tính toán...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="src/js/storage.js"></script>
+    <script src="src/js/optimizer.js"></script>
+    <script src="src/js/export.js"></script>
+    <script src="src/js/app.js"></script>
+  </body>
+</html>
