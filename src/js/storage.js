@@ -108,6 +108,11 @@ class StorageManager {
       totalWaste: result.totalWaste,
     };
 
+    // Đảm bảo history luôn là array (fix lỗi unshift undefined)
+    if (!data.history || !Array.isArray(data.history)) {
+      data.history = [];
+    }
+
     data.history.unshift(historyItem);
 
     // Giữ tối đa 10 lịch sử
