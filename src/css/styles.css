@@ -5,6 +5,50 @@
   box-sizing: border-box;
 }
 
+/* Item Styles */
+.item-row {
+  background: #f8f9fa;
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #e9ecef;
+}
+
+.item-info {
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.item-actions {
+  display: flex;
+  gap: 5px;
+}
+
+.item-delete,
+.item-edit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  transition: transform 0.1s;
+}
+
+.item-delete {
+  color: #dc3545;
+}
+.item-edit {
+  color: #007bff;
+}
+
+.item-delete:hover,
+.item-edit:hover {
+  transform: scale(1.2);
+}
+
 :root {
   /* Colors */
   --primary: #2563eb;

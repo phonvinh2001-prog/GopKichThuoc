@@ -75,6 +75,26 @@ class App {
     });
     // ... (Giữ nguyên các event cũ)
 
+    // === ACTION BUTTONS ===
+    document.getElementById("btnClearItems").addEventListener("click", () => {
+      if (confirm("Bạn có chắc muốn xóa toàn bộ danh sách chi tiết không?")) {
+        this.items = [];
+        this.renderItems();
+      }
+    });
+
+    document.getElementById("btnSaveTemplate").addEventListener("click", () => {
+      if (this.items.length === 0) {
+        alert("Danh sách trống, không có gì để lưu.");
+        return;
+      }
+      const name = prompt("Đặt tên cho danh sách mẫu này:", "Mẫu 01");
+      if (name) {
+        this.storage.saveTemplate(name, this.items);
+        alert("✅ Đã lưu mẫu thành công! (Tính năng load mẫu sẽ cập nhật sau)");
+      }
+    });
+
     // === IMPORT EVENTS ===
     const modal = document.getElementById("importModal");
     const btnImport = document.getElementById("btnImport");
@@ -152,24 +172,81 @@ class App {
   }
 
   /**
+   * Xử lý import chung (Text hoặc File)
+   */
+  async processImportData(newItems) {
+    if (newItems.length === 0) return;
+
+    let addedCount = 0;
+    let updatedCount = 0;
+    const duplicates = [];
+
+    // Phân loại items: Mới hoàn toàn hay Trùng lặp
+    newItems.forEach((newItem) => {
+      const existingItem = this.items.find((i) => i.length === newItem.length);
+      if (existingItem) {
+        duplicates.push({ newItem, existingItem });
+      } else {
+        this.items.push(newItem);
+        addedCount++;
+      }
+    });
+
+    // Xử lý trùng lặp
+    if (duplicates.length > 0) {
+      // Hỏi user: Cộng dồn hay Giữ nguyên?
+      // (Để đơn giản và nhanh, ta hỏi 1 lần cho tất cả thay vì từng cái)
+      const shouldMerge = confirm(
+        `Phát hiện ${duplicates.length} mục có kích thước trùng lặp.\n\n` +
+          `Bạn có muốn CỘNG DỒN số lượng vào các mục cũ không?\n` +
+          `(Nhấn OK để Cộng Dồn, Cancel để Bỏ Qua hoặc Nhập Mới dòng riêng)`,
+      );
+
+      if (shouldMerge) {
+        duplicates.forEach(({ newItem, existingItem }) => {
+          existingItem.quantity += newItem.quantity;
+          updatedCount++;
+        });
+      } else {
+        // Nếu user không muốn cộng dồn, hỏi tiếp: Nhập thành dòng mới hay Bỏ qua?
+        const shouldAddNew = confirm(
+          `Bạn đã chọn không cộng dồn.\n` +
+            `Vậy bạn có muốn nhập chúng thành các dòng MỚI riêng biệt không?\n` +
+            `(OK: Nhập mới, Cancel: Bỏ qua)`,
+        );
+
+        if (shouldAddNew) {
+          duplicates.forEach(({ newItem }) => {
+            this.items.push(newItem);
+            addedCount++;
+          });
+        }
+      }
+    }
+
+    if (addedCount > 0 || updatedCount > 0) {
+      this.renderItems();
+      alert(
+        `Đã hoàn tất!\n- Thêm mới: ${addedCount}\n- Cập nhật số lượng: ${updatedCount}`,
+      );
+      document.getElementById("importModal").style.display = "none";
+      document.getElementById("pasteArea").value = "";
+    } else {
+      alert("Không có thay đổi nào được thực hiện.");
+    }
+  }
+
+  /**
    * Xử lý text paste từ clipboard/excel
    */
   processImportText(text) {
     if (!text || !text.trim()) return;
 
     const lines = text.trim().split(/\r?\n/);
-    let count = 0;
+    const newItems = [];
 
     lines.forEach((line) => {
-      // Tách bằng tab, dấu phẩy, hoặc khoảng trắng
-      // Regex: Bắt số đầu tiên là length, số thứ 2 là quantity. Bỏ qua ký tự lạ.
-      // VD: "5300 15", "5300,15", "5300mm 15 cay"
-
-      // Clean line: replace all non-digit chars with space, except dot (if needed for float?)
-      // Nhưng kích thước nhôm thường là int.
-      const parts = line.trim().split(/[\t,;|\s]+/); // Split by common separators
-
-      // Tìm 2 số hợp lệ đầu tiên
+      const parts = line.trim().split(/[\t,;|\s]+/);
       const numbers = parts
         .filter((p) => !isNaN(parseFloat(p)) && isFinite(p))
         .map(Number);
@@ -177,23 +254,13 @@ class App {
       if (numbers.length >= 2) {
         const length = numbers[0];
         const quantity = numbers[1];
-
         if (length > 0 && quantity > 0) {
-          this.items.push({ length, quantity });
-          count++;
+          newItems.push({ length, quantity });
         }
       }
     });
 
-    if (count > 0) {
-      this.renderItems();
-      alert(`Đã nhập thành công ${count} mục!`);
-      document.getElementById("pasteArea").value = ""; // Clear
-    } else {
-      alert(
-        "Không tìm thấy dữ liệu hợp lệ. Vui lòng kiểm tra format (Chiều dài Số lượng)",
-      );
-    }
+    this.processImportData(newItems);
   }
 
   /**
@@ -206,35 +273,46 @@ class App {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: "array" });
       const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-
-      // Convert to JSON (mảng mảng)
       const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-      let count = 0;
+      const newItems = [];
       jsonData.forEach((row) => {
-        // Tìm 2 ô số đầu tiên trong row
         const numbers = row.filter((cell) => typeof cell === "number");
-
         if (numbers.length >= 2) {
           const length = numbers[0];
           const quantity = numbers[1];
           if (length > 0 && quantity > 0) {
-            this.items.push({ length, quantity });
-            count++;
+            newItems.push({ length, quantity });
           }
         }
       });
 
-      if (count > 0) {
-        this.renderItems();
-        alert(`Đã nhập thành công ${count} mục từ file Excel!`);
-        document.getElementById("importModal").style.display = "none";
-      } else {
-        alert("Không tìm thấy dữ liệu hợp lệ trong file Excel.");
-      }
+      this.processImportData(newItems);
     };
-
     reader.readAsArrayBuffer(file);
+  }
+
+  /**
+   * Chỉnh sửa item
+   */
+  editItem(index) {
+    const item = this.items[index];
+    const newLength = prompt("Nhập chiều dài mới:", item.length);
+    if (newLength === null) return; // Cancel
+
+    const newQuantity = prompt("Nhập số lượng mới:", item.quantity);
+    if (newQuantity === null) return; // Cancel
+
+    const l = parseFloat(newLength);
+    const q = parseInt(newQuantity);
+
+    if (!l || !q || l <= 0 || q <= 0) {
+      alert("Giá trị không hợp lệ!");
+      return;
+    }
+
+    this.items[index] = { length: l, quantity: q };
+    this.renderItems();
   }
 
   /**

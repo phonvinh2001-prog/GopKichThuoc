@@ -5,7 +5,11 @@
 
 class StorageManager {
   constructor() {
-    this.STORAGE_KEY = "aluminum_cutting_data";
+    this.KEYS = {
+      DATA: "cutting_opt_data",
+      HISTORY: "cutting_opt_history",
+      TEMPLATES: "cutting_opt_templates",
+    };
     this.autoSaveInterval = null;
   }
 
@@ -79,6 +83,22 @@ class StorageManager {
       clearInterval(this.autoSaveInterval);
       this.autoSaveInterval = null;
     }
+  }
+
+  /**
+   * Lưu Template mẫu
+   */
+  saveTemplate(name, items) {
+    const templates = this.getTemplates();
+    templates[name] = items;
+    localStorage.setItem(this.KEYS.TEMPLATES, JSON.stringify(templates));
+  }
+
+  /**
+   * Lấy danh sách Templates
+   */
+  getTemplates() {
+    return JSON.parse(localStorage.getItem(this.KEYS.TEMPLATES)) || {};
   }
 
   /**
