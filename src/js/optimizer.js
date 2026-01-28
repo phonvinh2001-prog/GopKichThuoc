@@ -367,14 +367,29 @@ class CuttingOptimizer {
       }
     });
 
-    // Cảnh báo nếu dùng kích thước gần min
+    // Cảnh báo nếu dùng kích thước gần min HOẶC có thể dùng kích thước nhỏ hơn Min
+    stocks.forEach((stock, index) => {
+      if (stock.isExisting) return; // Bỏ qua tồn kho
+
+      const usedLength = stock.length - stock.remaining; // Chiều dài thực tế sử dụng (đã gồm mạch cắt)
+
+      // Nếu sử dụng ít hơn Min đáng kể (ví dụ dư > 200mm so với Min)
+      // VD: Min 3500, dùng 3250 (dư 250). Có thể gợi ý dùng Stock 3300.
+      if (usedLength < config.minLength && stock.length === config.minLength) {
+        warnings.push({
+          type: "info",
+          message: `Thanh #${index + 1}: Chỉ sử dụng ${usedLength.toFixed(0)}mm. Nếu được, hãy giảm "Kích thước Min" xuống khoảng ${Math.ceil(usedLength / 100) * 100}mm để tiết kiệm hơn.`,
+        });
+      }
+    });
+
     const minStocks = stocks.filter(
       (s) => !s.isExisting && s.length < config.minLength + 500,
     );
     if (minStocks.length > 0) {
       warnings.push({
         type: "info",
-        message: `Có ${minStocks.length} thanh dùng kích thước gần Min. Có thể giảm Min để tối ưu hơn.`,
+        message: `Có ${minStocks.length} thanh dùng kích thước gần Min (${config.minLength}mm).`,
       });
     }
 
@@ -405,16 +420,37 @@ class CuttingOptimizer {
       if (!bestResult) break;
 
       // 2. Lọc ra các thanh "Tốt" (Good Stocks)
-      // Tiêu chí: Phế liệu <= maxWaste HOẶC Hiệu suất thanh > 90%
+      // 🛑 FIX: Thắt chặt điều kiện. Chỉ chấp nhận thanh có phế liệu <= maxWaste
+      // Bỏ điều kiện < 10% vì nó quá lỏng với thanh dài (VD: 10% của 6000 là 600mm > 100mm maxWaste)
       const goodStocks = bestResult.stocks.filter((stock) => {
-        const wastePercent = stock.remaining / stock.length;
-        return stock.remaining <= config.maxWaste || wastePercent < 0.1;
+        return stock.remaining <= config.maxWaste;
       });
 
       // 3. Xử lý trường hợp không có thanh nào đạt chuẩn
+      // Nếu không có thanh nào <= maxWaste, ta thử tìm những thanh "tạm chấp nhận được"
+      // (Ví dụ: phế liệu chỉ nhỉnh hơn chút xíu, hoặc hiệu suất rất cao > 98%)
       if (goodStocks.length === 0) {
-        // Nếu đã thử tối ưu nhưng tất cả đều "tệ", đành chấp nhận kết quả tốt nhất hiện có
-        // (Đây là Global Optimization tốt nhất cho lô này rồi)
+        const acceptableStocks = bestResult.stocks.filter((stock) => {
+          const wastePercent = stock.remaining / stock.length;
+          return wastePercent < 0.02; // Chỉ chấp nhận nếu phế liệu < 2% (rất tối ưu)
+        });
+
+        if (acceptableStocks.length > 0) {
+          finalStocks.push(...acceptableStocks);
+
+          // Những thanh còn lại (tệ thật sự) sẽ đẩy xuống vòng lặp
+          const badStocks = bestResult.stocks.filter(
+            (s) => !acceptableStocks.includes(s),
+          );
+          const nextItems = [];
+          badStocks.forEach((stock) => nextItems.push(...stock.cuts));
+          remainingItems = nextItems;
+
+          if (remainingItems.length === 0) break; // Xong hết
+          continue; // Tiếp tục vòng lặp với items còn lại
+        }
+
+        // Nếu tất cả đều tệ và không thể tối ưu hơn, đành chấp nhận kết quả hiện tại
         finalStocks.push(...bestResult.stocks);
         remainingItems = [];
         break;
@@ -423,10 +459,9 @@ class CuttingOptimizer {
       // 4. Chấp nhận các thanh tốt
       finalStocks.push(...goodStocks);
 
-      // 5. Lấy các item từ các thanh "Tệ" để tối ưu lại ở vòng lặp sau
+      // 5. Lấy các item từ các thanh "Tệ" (remaining > maxWaste) để tối ưu lại
       const badStocks = bestResult.stocks.filter((stock) => {
-        const wastePercent = stock.remaining / stock.length;
-        return stock.remaining > config.maxWaste && wastePercent >= 0.1;
+        return stock.remaining > config.maxWaste;
       });
 
       const nextItems = [];
