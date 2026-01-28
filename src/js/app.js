@@ -69,25 +69,79 @@ class App {
    * Setup event listeners
    */
   setupEventListeners() {
-    // Enter key để thêm item
+    // Enter key shortcuts...
     document.getElementById("itemLength").addEventListener("keypress", (e) => {
       if (e.key === "Enter") this.addItem();
     });
-    document
-      .getElementById("itemQuantity")
-      .addEventListener("keypress", (e) => {
-        if (e.key === "Enter") this.addItem();
-      });
+    // ... (Giữ nguyên các event cũ)
 
-    // Enter key để thêm stock
-    document.getElementById("stockLength").addEventListener("keypress", (e) => {
-      if (e.key === "Enter") this.addStock();
-    });
-    document
-      .getElementById("stockQuantity")
-      .addEventListener("keypress", (e) => {
-        if (e.key === "Enter") this.addStock();
+    // === IMPORT EVENTS ===
+    const modal = document.getElementById("importModal");
+    const btnImport = document.getElementById("btnImport");
+    const closeBtn = document.querySelector(".close-modal");
+
+    // Mở modal
+    btnImport.onclick = () => {
+      modal.style.display = "flex";
+      document.getElementById("pasteArea").focus();
+    };
+
+    // Đóng modal
+    closeBtn.onclick = () => (modal.style.display = "none");
+    window.onclick = (e) => {
+      if (e.target == modal) modal.style.display = "none";
+    };
+
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        // Remove active
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => (c.style.display = "none"));
+
+        // Set active
+        btn.classList.add("active");
+        const tabId = btn.getAttribute("data-tab");
+        const map = { paste: "tabPaste", file: "tabFile" };
+        document.getElementById(map[tabId]).style.display = "block";
       });
+    });
+
+    // Process Paste
+    document.getElementById("btnProcessPaste").addEventListener("click", () => {
+      const text = document.getElementById("pasteArea").value;
+      this.processImportText(text);
+      modal.style.display = "none";
+    });
+
+    // Process File
+    const fileInput = document.getElementById("fileInput");
+    const dropZone = document.getElementById("dropZone");
+
+    // Drag & Drop
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "#007bff";
+    });
+    dropZone.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "#ced4da";
+    });
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "#ced4da";
+      if (e.dataTransfer.files.length)
+        this.processImportFile(e.dataTransfer.files[0]);
+    });
+
+    // File Input
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files.length) this.processImportFile(e.target.files[0]);
+    });
 
     // Lưu config khi thay đổi
     ["kerf", "maxWaste", "minLength", "maxLength", "stepSize"].forEach((id) => {
@@ -95,6 +149,92 @@ class App {
         this.updateConfig();
       });
     });
+  }
+
+  /**
+   * Xử lý text paste từ clipboard/excel
+   */
+  processImportText(text) {
+    if (!text || !text.trim()) return;
+
+    const lines = text.trim().split(/\r?\n/);
+    let count = 0;
+
+    lines.forEach((line) => {
+      // Tách bằng tab, dấu phẩy, hoặc khoảng trắng
+      // Regex: Bắt số đầu tiên là length, số thứ 2 là quantity. Bỏ qua ký tự lạ.
+      // VD: "5300 15", "5300,15", "5300mm 15 cay"
+
+      // Clean line: replace all non-digit chars with space, except dot (if needed for float?)
+      // Nhưng kích thước nhôm thường là int.
+      const parts = line.trim().split(/[\t,;|\s]+/); // Split by common separators
+
+      // Tìm 2 số hợp lệ đầu tiên
+      const numbers = parts
+        .filter((p) => !isNaN(parseFloat(p)) && isFinite(p))
+        .map(Number);
+
+      if (numbers.length >= 2) {
+        const length = numbers[0];
+        const quantity = numbers[1];
+
+        if (length > 0 && quantity > 0) {
+          this.items.push({ length, quantity });
+          count++;
+        }
+      }
+    });
+
+    if (count > 0) {
+      this.renderItems();
+      alert(`Đã nhập thành công ${count} mục!`);
+      document.getElementById("pasteArea").value = ""; // Clear
+    } else {
+      alert(
+        "Không tìm thấy dữ liệu hợp lệ. Vui lòng kiểm tra format (Chiều dài Số lượng)",
+      );
+    }
+  }
+
+  /**
+   * Xử lý import file Excel
+   */
+  processImportFile(file) {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      // Convert to JSON (mảng mảng)
+      const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+      let count = 0;
+      jsonData.forEach((row) => {
+        // Tìm 2 ô số đầu tiên trong row
+        const numbers = row.filter((cell) => typeof cell === "number");
+
+        if (numbers.length >= 2) {
+          const length = numbers[0];
+          const quantity = numbers[1];
+          if (length > 0 && quantity > 0) {
+            this.items.push({ length, quantity });
+            count++;
+          }
+        }
+      });
+
+      if (count > 0) {
+        this.renderItems();
+        alert(`Đã nhập thành công ${count} mục từ file Excel!`);
+        document.getElementById("importModal").style.display = "none";
+      } else {
+        alert("Không tìm thấy dữ liệu hợp lệ trong file Excel.");
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
   }
 
   /**

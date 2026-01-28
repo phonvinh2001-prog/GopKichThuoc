@@ -26,7 +26,65 @@
       <div class="main-grid">
         <!-- Left Panel: Input Form -->
         <section class="panel input-panel">
-          <h2>📝 Nhập Liệu</h2>
+          <div class="panel-header">
+            <h2>� Nhập liệu</h2>
+            <div class="header-actions">
+              <button
+                id="btnImport"
+                class="btn-secondary"
+                title="Nhập từ Excel/Copy"
+              >
+                📂 Import
+              </button>
+            </div>
+          </div>
+
+          <!-- Modal Import -->
+          <div id="importModal" class="modal" style="display: none">
+            <div class="modal-content">
+              <span class="close-modal">&times;</span>
+              <h3>📋 Nhập dữ liệu nhanh</h3>
+
+              <div class="import-tabs">
+                <button class="tab-btn active" data-tab="paste">
+                  📋 Dán nội dung
+                </button>
+                <button class="tab-btn" data-tab="file">📂 Chọn file</button>
+              </div>
+
+              <!-- Tab Paste -->
+              <div id="tabPaste" class="tab-content active">
+                <p class="hint">
+                  Copy từ Excel (Cột A: Chiều dài, Cột B: Số lượng) rồi dán vào
+                  đây:
+                </p>
+                <textarea
+                  id="pasteArea"
+                  rows="10"
+                  placeholder="Ví dụ:\n5300 15\n2050 18\n3250 90"
+                ></textarea>
+                <div class="action-buttons">
+                  <button id="btnProcessPaste" class="btn-primary">
+                    Nhập dữ liệu
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tab File -->
+              <div id="tabFile" class="tab-content" style="display: none">
+                <div class="file-drop-area" id="dropZone">
+                  <p>Kéo thả file Excel/CSV vào đây hoặc</p>
+                  <input
+                    type="file"
+                    id="fileInput"
+                    accept=".xlsx, .xls, .csv"
+                  />
+                  <label for="fileInput" class="btn-secondary">Chọn File</label>
+                </div>
+                <p class="hint">File cần có cột "Chiều dài" và "Số lượng"</p>
+              </div>
+            </div>
+          </div>
 
           <!-- Danh sách chi tiết -->
           <div class="form-group">
