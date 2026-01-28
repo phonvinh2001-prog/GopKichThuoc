@@ -1,37 +1,34 @@
 {
+  "meta": { "schema_version": "1.1.0", "awf_version": "4.0.0" },
   "project": {
-    "name": "Hệ thống Tối Ưu Hóa Cắt Nhôm",
-    "type": "web-app",
-    "purpose": "Tính toán kích thước phôi nhôm tối ưu để giảm thiểu phế liệu",
-    "domain": "Manufacturing Optimization"
+    "name": "Aluminum Cutting Optimizer",
+    "type": "Web Utility",
+    "status": "In Development"
   },
   "tech_stack": {
-    "frontend": "HTML + Vanilla CSS + JavaScript",
-    "algorithm": "First Fit Decreasing + Global Optimization",
-    "storage": "LocalStorage API",
-    "export": "SheetJS (xlsx)",
-    "print": "CSS Print Media Queries"
+    "frontend": { "core": "HTML/CSS/JS", "framework": "None" },
+    "backend": { "core": "None" },
+    "database": { "core": "LocalStorage" },
+    "libraries": ["SheetJS (xlsx)"]
   },
-  "structure": {
-    "src/js/app.js": "Logic chính, event handlers, UI rendering",
-    "src/js/optimizer.js": "Thuật toán tối ưu hóa cắt stock",
-    "src/js/storage.js": "Quản lý LocalStorage, auto-save",
-    "src/js/export.js": "Xuất Excel và In ấn",
-    "src/css/styles.css": "Thiết kế responsive, modern UI",
-    "index.html": "Giao diện chính"
-  },
-  "key_features": [
-    "Multi-stock optimization (thử nhiều kích thước)",
-    "Visual cutting diagram (sơ đồ cắt trực quan)",
-    "LocalStorage persistence (lưu tự động)",
-    "Excel export (xuất file cho nhà máy)",
-    "Print-friendly layout (in A4)",
-    "Inventory management (quản lý tồn kho)",
-    "Responsive design (mobile/tablet/desktop)"
+  "features": [
+    "Multi-stock optimization",
+    "Iterative Residual Algorithm",
+    "Data Import (Paste/Excel)",
+    "Duplicate Detection & Merging",
+    "Save/Load Templates",
+    "Export to Excel/Print",
+    "Visual Cutting Diagram"
   ],
-  "conventions": {
-    "naming": "camelCase cho JS, kebab-case cho CSS classes",
-    "comments": "Tiếng Việt cho logic phức tạp",
-    "units": "mm (milimeter) cho tất cả kích thước"
+  "knowledge_items": {
+    "patterns": ["Module Pattern", "Event Delegation", "Iterative Refinement"],
+    "gotchas": [
+      "Need to filter 'Good Stocks' strictly by MaxWaste, not just percentage.",
+      "SheetJS read returns array of arrays, need parsing logic."
+    ],
+    "conventions": [
+      "Use 'mm' for units",
+      "Zero-indexed arrays but 1-indexed UI display"
+    ]
   }
 }
