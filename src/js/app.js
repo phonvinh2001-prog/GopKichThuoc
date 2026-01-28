@@ -312,24 +312,62 @@ class App {
   }
 
   /**
-   * Render sơ đồ cắt
+   * Render sơ đồ cắt (đã gộp các thanh giống nhau)
    */
   renderCuttingDiagram(stocks) {
     const container = document.getElementById("cuttingDiagram");
     container.style.display = "block";
 
-    container.innerHTML = stocks
-      .map((stock, index) => {
+    // Gộp các thanh giống nhau
+    const groupedStocks = [];
+    stocks.forEach((stock, originalIndex) => {
+      // Key để so sánh: chiều dài + danh sách cắt + loại (tồn kho/mới)
+      // JSON.stringify mảng cuts là cách đơn giản nhất để so sánh nội dung
+      const matchDetails = JSON.stringify(stock.cuts);
+
+      const existingGroup = groupedStocks.find(
+        (g) =>
+          g.stock.length === stock.length &&
+          JSON.stringify(g.stock.cuts) === matchDetails &&
+          g.stock.isExisting === stock.isExisting,
+      );
+
+      if (existingGroup) {
+        existingGroup.count++;
+        existingGroup.indices.push(originalIndex + 1);
+      } else {
+        groupedStocks.push({
+          stock: stock,
+          count: 1,
+          indices: [originalIndex + 1],
+        });
+      }
+    });
+
+    container.innerHTML = groupedStocks
+      .map((group) => {
+        const stock = group.stock;
         const usedLength = stock.cuts.reduce((sum, cut) => sum + cut, 0);
         const usedPercent = (usedLength / stock.length) * 100;
         const wastePercent = (stock.remaining / stock.length) * 100;
 
+        // Tạo label tiêu đề (VD: Thanh #1 - #5 (5 thanh))
+        let headerLabel = `Thanh #${group.indices[0]}`;
+        if (group.count > 1) {
+          const lastIndex = group.indices[group.indices.length - 1];
+          headerLabel = `Thanh #${group.indices[0]} ➝ #${lastIndex}`;
+        }
+
         let html = `
                 <div class="stock-item">
                     <div class="stock-header">
-                        Thanh #${index + 1}: ${stock.length}mm 
-                        ${stock.isExisting ? "(Tồn kho)" : "(Đặt mới)"}
-                        - Phế liệu: ${stock.remaining.toFixed(1)}mm
+                        <span class="stock-index">${headerLabel}</span>
+                        ${group.count > 1 ? `<span class="stock-count-badge">${group.count} thanh</span>` : ""}
+                        <span class="stock-specs">
+                            ${stock.length}mm 
+                            ${stock.isExisting ? "(Tồn kho)" : ""}
+                            - Phế liệu: ${stock.remaining.toFixed(1)}mm
+                        </span>
                     </div>
                     <div class="stock-bar">
             `;
