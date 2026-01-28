@@ -288,12 +288,55 @@ class CuttingOptimizer {
       });
     }
 
-    // Cảnh báo phế liệu lớn
+    // 🆕 BAD SOLUTION DETECTION - Phát hiện thanh có phế liệu quá lớn
+    const badSolutions = [];
     stocks.forEach((stock, index) => {
-      if (stock.remaining > config.maxWaste) {
+      const wastePercent = (stock.remaining / stock.length) * 100;
+
+      if (wastePercent > 70) {
+        badSolutions.push({
+          index: index + 1,
+          length: stock.length,
+          cuts: stock.cuts,
+          waste: stock.remaining,
+          wastePercent: wastePercent.toFixed(1),
+          severity: "CRITICAL",
+        });
+      } else if (wastePercent > 50) {
+        badSolutions.push({
+          index: index + 1,
+          length: stock.length,
+          cuts: stock.cuts,
+          waste: stock.remaining,
+          wastePercent: wastePercent.toFixed(1),
+          severity: "WARNING",
+        });
+      }
+    });
+
+    // Tạo cảnh báo cho Bad Solutions
+    badSolutions.forEach((bad) => {
+      if (bad.severity === "CRITICAL") {
+        warnings.push({
+          type: "error",
+          message: `🚨 CRITICAL: Thanh #${bad.index} (${bad.length}mm) cắt ${bad.cuts.join("+")}mm, dư ${bad.waste.toFixed(0)}mm (${bad.wastePercent}%). Đề xuất: Ghép với thanh khác hoặc đặt custom size.`,
+        });
+      } else {
         warnings.push({
           type: "warning",
-          message: `Thanh #${index + 1} (${stock.length}mm) có phế liệu ${stock.remaining}mm vượt ngưỡng ${config.maxWaste}mm`,
+          message: `⚠️ WARNING: Thanh #${bad.index} (${bad.length}mm) có phế liệu ${bad.wastePercent}%. Cân nhắc tối ưu lại hoặc sử dụng thanh tồn kho.`,
+        });
+      }
+    });
+
+    // Cảnh báo phế liệu vượt ngưỡng (giữ nguyên logic cũ)
+    stocks.forEach((stock, index) => {
+      const wastePercent = (stock.remaining / stock.length) * 100;
+      // Chỉ cảnh báo nếu chưa được phát hiện bởi Bad Solution Detection
+      if (stock.remaining > config.maxWaste && wastePercent <= 50) {
+        warnings.push({
+          type: "warning",
+          message: `Thanh #${index + 1} (${stock.length}mm) có phế liệu ${stock.remaining.toFixed(0)}mm vượt ngưỡng ${config.maxWaste}mm`,
         });
       }
     });
