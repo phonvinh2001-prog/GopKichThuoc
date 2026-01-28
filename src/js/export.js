@@ -8,43 +8,139 @@ class ExportManager {
   }
 
   /**
-   * Xuất Excel sử dụng SheetJS
+   * Xuất báo cáo Excel chi tiết
    */
-  exportExcel(result) {
-    if (!result) {
-      alert("Chưa có dữ liệu để xuất");
-      return;
-    }
+  exportToExcel(items, result) {
+    if (!result) return;
 
-    try {
-      // Tạo workbook
-      const wb = XLSX.utils.book_new();
+    const wb = XLSX.utils.book_new();
 
-      // Sheet 1: Tổng hợp đặt hàng
-      const summaryData = this.createSummarySheet(result);
-      const ws1 = XLSX.utils.aoa_to_sheet(summaryData);
-      XLSX.utils.book_append_sheet(wb, ws1, "Tổng hợp đặt hàng");
+    // --- SHEET 1: DANH SÁCH ĐẶT HÀNG (Order List) ---
+    // Đây là danh sách yêu cầu cắt (Items) mà user nhập vào
+    const inputData = items.map((item, index) => ({
+      STT: index + 1,
+      "Kích thước yêu cầu (mm)": item.length,
+      "Số lượng": item.quantity,
+      "Tổng chiều dài (m)": ((item.length * item.quantity) / 1000).toFixed(2),
+    }));
+    const wsInput = XLSX.utils.json_to_sheet(inputData);
 
-      // Sheet 2: Sơ đồ cắt chi tiết
-      const cuttingData = this.createCuttingSheet(result);
-      const ws2 = XLSX.utils.aoa_to_sheet(cuttingData);
-      XLSX.utils.book_append_sheet(wb, ws2, "Sơ đồ cắt");
+    // Auto-width columns roughly
+    wsInput["!cols"] = [{ wch: 5 }, { wch: 25 }, { wch: 10 }, { wch: 20 }];
 
-      // Sheet 3: Thống kê
-      const statsData = this.createStatsSheet(result);
-      const ws3 = XLSX.utils.aoa_to_sheet(statsData);
-      XLSX.utils.book_append_sheet(wb, ws3, "Thống kê");
+    XLSX.utils.book_append_sheet(wb, wsInput, "Danh Sách Đặt Hàng");
 
-      // Xuất file
-      const fileName = `Toi_uu_cat_nhom_${this.getDateString()}.xlsx`;
-      XLSX.writeFile(wb, fileName);
+    // --- SHEET 2: SƠ ĐỒ CẮT (Cutting Diagram) - GỘP NHÓM ---
+    const groupedStocks = [];
+    result.stocks.forEach((stock, originalIndex) => {
+      const matchDetails = JSON.stringify(stock.cuts);
+      // Gom nhóm các thanh cùng chiều dài phôi VÀ cùng cách cắt
+      const existingGroup = groupedStocks.find(
+        (g) =>
+          g.stock.length === stock.length &&
+          JSON.stringify(g.stock.cuts) === matchDetails,
+      );
 
-      return true;
-    } catch (error) {
-      console.error("Lỗi khi xuất Excel:", error);
-      alert("Có lỗi khi xuất Excel. Vui lòng thử lại.");
-      return false;
-    }
+      if (existingGroup) {
+        existingGroup.count++;
+        existingGroup.indices.push(originalIndex + 1);
+      } else {
+        groupedStocks.push({
+          stock: stock,
+          count: 1,
+          indices: [originalIndex + 1],
+        });
+      }
+    });
+
+    const resultData = groupedStocks.map((group, idx) => {
+      const s = group.stock;
+      const wastePercent = ((s.remaining / s.length) * 100).toFixed(1);
+
+      return {
+        STT: idx + 1,
+        "Loại Phôi (mm)": s.length,
+        "Số lượng thanh": group.count,
+        "Cách cắt (Chi tiết mm)": s.cuts.join(" + "),
+        "Phế liệu (mm)": s.remaining.toFixed(0),
+        "% Phế liệu": `${wastePercent}%`,
+        // "Vị trí (Index)": group.indices.length > 5 ? `${group.indices[0]}...${group.indices[group.indices.length-1]}` : group.indices.join(", ")
+      };
+    });
+    const wsResult = XLSX.utils.json_to_sheet(resultData);
+    wsResult["!cols"] = [
+      { wch: 5 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 50 },
+      { wch: 15 },
+      { wch: 10 },
+    ];
+    XLSX.utils.book_append_sheet(wb, wsResult, "Sơ Đồ Cắt");
+
+    // --- SHEET 3: THỐNG KÊ CHI TIẾT (Statistics) ---
+    const stats = result.summary;
+
+    // B1: Thống kê số lượng từng loại phôi
+    const stockBreakdown = {};
+    result.stocks.forEach((s) => {
+      stockBreakdown[s.length] = (stockBreakdown[s.length] || 0) + 1;
+    });
+
+    const statsData = [];
+
+    // Phần 1: Tổng quan
+    statsData.push({ "Hạng mục": "TỔNG QUAN", "Giá trị": "", "Đơn vị": "" });
+    statsData.push({
+      "Hạng mục": "Tổng số thanh nhôm cần mua",
+      "Giá trị": stats.totalBars,
+      "Đơn vị": "thanh",
+    });
+    statsData.push({
+      "Hạng mục": "Tổng chiều dài phôi nhập",
+      "Giá trị": (stats.totalStockLength / 1000).toFixed(2),
+      "Đơn vị": "mét",
+    });
+    statsData.push({
+      "Hạng mục": "Tổng chiều dài thành phẩm",
+      "Giá trị": (stats.totalUsedLength / 1000).toFixed(2),
+      "Đơn vị": "mét",
+    });
+    statsData.push({
+      "Hạng mục": "Tổng phế liệu",
+      "Giá trị": (stats.totalWasteLength / 1000).toFixed(2),
+      "Đơn vị": "mét",
+    });
+    statsData.push({
+      "Hạng mục": "Hiệu suất sử dụng",
+      "Giá trị": stats.efficiency.toFixed(2),
+      "Đơn vị": "%",
+    });
+    statsData.push({ "Hạng mục": "", "Giá trị": "", "Đơn vị": "" }); // Spacer
+
+    // Phần 2: Chi tiết vật tư (Breakdown)
+    statsData.push({
+      "Hạng mục": "CHI TIẾT VẬT TƯ CẦN NHẬP",
+      "Giá trị": "",
+      "Đơn vị": "",
+    });
+    Object.entries(stockBreakdown)
+      .sort((a, b) => b[0] - a[0])
+      .forEach(([length, count]) => {
+        statsData.push({
+          "Hạng mục": `Phôi dài ${length}mm`,
+          "Giá trị": count,
+          "Đơn vị": "thanh",
+        });
+      });
+
+    const wsStats = XLSX.utils.json_to_sheet(statsData);
+    wsStats["!cols"] = [{ wch: 35 }, { wch: 15 }, { wch: 10 }];
+    XLSX.utils.book_append_sheet(wb, wsStats, "Thống Kê");
+
+    // --- SAVE FILE ---
+    const dateStr = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Bao_Cao_Cat_Nhom_${dateStr}.xlsx`);
   }
 
   /**
