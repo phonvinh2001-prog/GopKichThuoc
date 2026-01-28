@@ -303,93 +303,135 @@ class CuttingOptimizer {
   /**
    * Tạo cảnh báo
    */
+  /**
+   * Tạo cảnh báo (Gộp nhóm thông minh)
+   */
   generateWarnings(stocks, config, efficiency) {
     const warnings = [];
 
-    // Cảnh báo hiệu suất thấp
+    // 1. Cảnh báo hiệu suất thấp (Chung)
     if (efficiency < 80) {
       warnings.push({
         type: "warning",
-        message: `Hiệu suất chỉ ${efficiency.toFixed(1)}%, có thể chưa tối ưu. Thử điều chỉnh khoảng tìm kiếm hoặc bước nhảy.`,
+        message: `Hiệu suất tổng thể chỉ ${efficiency.toFixed(1)}%, có thể chưa tối ưu. Thử điều chỉnh khoảng tìm kiếm hoặc bước nhảy.`,
       });
     }
 
-    // 🆕 BAD SOLUTION DETECTION - Phát hiện thanh có phế liệu quá lớn
-    const badSolutions = [];
-    stocks.forEach((stock, index) => {
-      const wastePercent = (stock.remaining / stock.length) * 100;
+    // 2. Gom nhóm các lỗi cụ thể để báo cáo gọn hơn
+    const groups = {
+      criticalWaste: {}, // Lãng phí nghiêm trọng
+      warningWaste: {}, // Lãng phí cảnh báo (50-70%)
+      overMaxWaste: {}, // Vượt ngưỡng Max Waste
+      minSizeSuggestion: {}, // Gợi ý giảm Min Size
+    };
 
+    stocks.forEach((stock, index) => {
+      const idx = index + 1;
+      const wastePercent = (stock.remaining / stock.length) * 100;
+      const wasteVal = stock.remaining.toFixed(0);
+
+      // A. Bad Solution Detection
       if (wastePercent > 70) {
-        badSolutions.push({
-          index: index + 1,
-          length: stock.length,
-          cuts: stock.cuts,
-          waste: stock.remaining,
-          wastePercent: wastePercent.toFixed(1),
-          severity: "CRITICAL",
-        });
+        const key = `${stock.length}_${wasteVal}_${wastePercent.toFixed(1)}`;
+        if (!groups.criticalWaste[key])
+          groups.criticalWaste[key] = {
+            ids: [],
+            len: stock.length,
+            waste: wasteVal,
+            pct: wastePercent.toFixed(1),
+            cuts: stock.cuts,
+          };
+        groups.criticalWaste[key].ids.push(idx);
       } else if (wastePercent > 50) {
-        badSolutions.push({
-          index: index + 1,
-          length: stock.length,
-          cuts: stock.cuts,
-          waste: stock.remaining,
-          wastePercent: wastePercent.toFixed(1),
-          severity: "WARNING",
-        });
+        const key = `${stock.length}_${wasteVal}_${wastePercent.toFixed(1)}`;
+        if (!groups.warningWaste[key])
+          groups.warningWaste[key] = {
+            ids: [],
+            len: stock.length,
+            waste: wasteVal,
+            pct: wastePercent.toFixed(1),
+          };
+        groups.warningWaste[key].ids.push(idx);
       }
-    });
 
-    // Tạo cảnh báo cho Bad Solutions
-    badSolutions.forEach((bad) => {
-      if (bad.severity === "CRITICAL") {
-        warnings.push({
-          type: "error",
-          message: `🚨 CRITICAL: Thanh #${bad.index} (${bad.length}mm) cắt ${bad.cuts.join("+")}mm, dư ${bad.waste.toFixed(0)}mm (${bad.wastePercent}%). Đề xuất: Ghép với thanh khác hoặc đặt custom size.`,
-        });
-      } else {
-        warnings.push({
-          type: "warning",
-          message: `⚠️ WARNING: Thanh #${bad.index} (${bad.length}mm) có phế liệu ${bad.wastePercent}%. Cân nhắc tối ưu lại hoặc sử dụng thanh tồn kho.`,
-        });
-      }
-    });
-
-    // Cảnh báo phế liệu vượt ngưỡng (giữ nguyên logic cũ)
-    stocks.forEach((stock, index) => {
-      const wastePercent = (stock.remaining / stock.length) * 100;
-      // Chỉ cảnh báo nếu chưa được phát hiện bởi Bad Solution Detection
+      // B. Max Waste Exceeded (chỉ báo nếu chưa nằm trong critical/warning trên để tránh duplicate)
       if (stock.remaining > config.maxWaste && wastePercent <= 50) {
-        warnings.push({
-          type: "warning",
-          message: `Thanh #${index + 1} (${stock.length}mm) có phế liệu ${stock.remaining.toFixed(0)}mm vượt ngưỡng ${config.maxWaste}mm`,
-        });
+        const key = `${stock.length}_${wasteVal}`;
+        if (!groups.overMaxWaste[key])
+          groups.overMaxWaste[key] = {
+            ids: [],
+            len: stock.length,
+            waste: wasteVal,
+          };
+        groups.overMaxWaste[key].ids.push(idx);
+      }
+
+      // C. Min Size Suggestion
+      if (!stock.isExisting) {
+        const usedLength = stock.length - stock.remaining;
+        if (
+          usedLength < config.minLength &&
+          stock.length === config.minLength
+        ) {
+          const suggestedMin = Math.ceil(usedLength / 100) * 100;
+          const key = `${usedLength.toFixed(0)}_${suggestedMin}`;
+          if (!groups.minSizeSuggestion[key])
+            groups.minSizeSuggestion[key] = {
+              ids: [],
+              used: usedLength.toFixed(0),
+              suggest: suggestedMin,
+            };
+          groups.minSizeSuggestion[key].ids.push(idx);
+        }
       }
     });
 
-    // Cảnh báo nếu dùng kích thước gần min HOẶC có thể dùng kích thước nhỏ hơn Min
-    stocks.forEach((stock, index) => {
-      if (stock.isExisting) return; // Bỏ qua tồn kho
+    // 3. Generate messages từ groups
 
-      const usedLength = stock.length - stock.remaining; // Chiều dài thực tế sử dụng (đã gồm mạch cắt)
-
-      // Nếu sử dụng ít hơn Min đáng kể (ví dụ dư > 200mm so với Min)
-      // VD: Min 3500, dùng 3250 (dư 250). Có thể gợi ý dùng Stock 3300.
-      if (usedLength < config.minLength && stock.length === config.minLength) {
-        warnings.push({
-          type: "info",
-          message: `Thanh #${index + 1}: Chỉ sử dụng ${usedLength.toFixed(0)}mm. Nếu được, hãy giảm "Kích thước Min" xuống khoảng ${Math.ceil(usedLength / 100) * 100}mm để tiết kiệm hơn.`,
-        });
-      }
+    // Critical Waste
+    Object.values(groups.criticalWaste).forEach((g) => {
+      const range = this.formatIndexRanges(g.ids);
+      warnings.push({
+        type: "error",
+        message: `🚨 CRITICAL (${g.ids.length} thanh): Các thanh ${range} (${g.len}mm) dư ${g.waste}mm (${g.pct}%). Đề xuất: Ghép với thanh khác hoặc đặt custom size.`,
+      });
     });
 
+    // Warning Waste
+    Object.values(groups.warningWaste).forEach((g) => {
+      const range = this.formatIndexRanges(g.ids);
+      warnings.push({
+        type: "warning",
+        message: `⚠️ WARNING (${g.ids.length} thanh): Các thanh ${range} (${g.len}mm) có phế liệu ${g.pct}%.`,
+      });
+    });
+
+    // Over Max Waste
+    Object.values(groups.overMaxWaste).forEach((g) => {
+      const range = this.formatIndexRanges(g.ids);
+      warnings.push({
+        type: "warning",
+        message: `⚠️ Phế liệu cao (${g.ids.length} thanh): Các thanh ${range} (${g.len}mm) có phế liệu ${g.waste}mm vượt ngưỡng ${config.maxWaste}mm.`,
+      });
+    });
+
+    // Min Size Suggestions
+    Object.values(groups.minSizeSuggestion).forEach((g) => {
+      const range = this.formatIndexRanges(g.ids);
+      warnings.push({
+        type: "info",
+        message: `💡 Gợi ý (${g.ids.length} thanh): Các thanh ${range} chỉ dùng ${g.used}mm. Hãy cân nhắc giảm "Kích thước Min" xuống ${g.suggest}mm.`,
+      });
+    });
+
+    // D. Dùng kích thước gần Min (Info) - Cái này giữ nguyên logic gộp cũ
     const minStocks = stocks.filter(
       (s) => !s.isExisting && s.length < config.minLength + 500,
     );
     if (minStocks.length > 0) {
       warnings.push({
         type: "info",
-        message: `Có ${minStocks.length} thanh dùng kích thước gần Min (${config.minLength}mm).`,
+        message: `ℹ️ Có ${minStocks.length} thanh sử dụng kích thước gần Min (${config.minLength}mm).`,
       });
     }
 
@@ -397,12 +439,33 @@ class CuttingOptimizer {
   }
 
   /**
+   * Helper: Format mảng index thành range (VD: 1,2,3,5 -> "#1-#3, #5")
+   */
+  formatIndexRanges(indices) {
+    if (!indices || indices.length === 0) return "";
+    indices.sort((a, b) => a - b);
+
+    const ranges = [];
+    let start = indices[0];
+    let prev = indices[0];
+
+    for (let i = 1; i < indices.length; i++) {
+      if (indices[i] !== prev + 1) {
+        ranges.push(start === prev ? `#${start}` : `#${start}-#${prev}`);
+        start = indices[i];
+      }
+      prev = indices[i];
+    }
+    ranges.push(start === prev ? `#${start}` : `#${start}-#${prev}`);
+
+    return ranges.join(", ");
+  }
+
+  /**
    * Multi-Stock Optimization (Nâng cao - Phase 2)
    * Thử kết hợp nhiều kích thước khác nhau
    */
   /**
-   * Multi-Stock Optimization (Thuật toán Iterative Residual)
-   * Tự động kết hợp nhiều kích thước phôi để tối ưu hóa
    */
   multiStockOptimization(items, config) {
     let remainingItems = [...items];
