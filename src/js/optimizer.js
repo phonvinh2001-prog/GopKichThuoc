@@ -213,14 +213,25 @@ class CuttingOptimizer {
     }
 
     // Tính toán tổng hợp
+    // totalUsed = tổng chiều dài chi tiết (không tính mạch cắt)
     const totalUsed = allStocks.reduce(
       (sum, stock) => sum + stock.cuts.reduce((s, cut) => s + cut, 0),
       0,
     );
 
     const totalLength = allStocks.reduce((sum, stock) => sum + stock.length, 0);
-    const efficiency = (totalUsed / totalLength) * 100;
-    const totalWaste = totalLength - totalUsed;
+
+    // totalWaste = tổng phế liệu thực tế (đã tính mạch cắt)
+    // Phải dùng stock.remaining vì nó đã trừ cả mạch cắt
+    const totalWaste = allStocks.reduce(
+      (sum, stock) => sum + stock.remaining,
+      0,
+    );
+
+    // totalUsedWithKerf = tổng sử dụng thực tế (bao gồm cả mạch cắt)
+    const totalUsedWithKerf = totalLength - totalWaste;
+
+    const efficiency = (totalUsedWithKerf / totalLength) * 100;
 
     // Tạo summary theo kích thước
     const summary = this.createSummary(allStocks);
