@@ -781,7 +781,7 @@ class App {
       return;
     }
 
-    this.exporter.exportExcel(this.currentResult);
+    this.exporter.exportToExcel(this.items, this.currentResult);
   }
 
   /**

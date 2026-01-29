@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-01-29] - Fix Excel Export & Project Init
+
+### Added
+
+- Dự án được khởi tạo bằng cách clone từ GitHub.
+
+### Fixed
+
+- **Excel Export**: Sửa lỗi `TypeError: Cannot read properties of undefined (reading 'toFixed')` khi xuất file.
+- **Mapping Data**: Đồng bộ hóa tên các thuộc tính thống kê (`totalStocks`, `totalLength`, `totalUsed`, `totalWaste`) giữa `optimizer.js` và `export.js`.
+- **Method Mismatch**: Sửa lỗi gọi sai tên hàm và thiếu tham số `items` khi gọi `exportToExcel`.
+- **Compatibility**: Thêm alias `exportExcel` trong `ExportManager` để tránh lỗi gọi nhầm.
+
 ## [2026-01-28] - Improved Optimization & Data Management
 
 ### Added

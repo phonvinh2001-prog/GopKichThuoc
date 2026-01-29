@@ -24,7 +24,8 @@
     "patterns": ["Module Pattern", "Event Delegation", "Iterative Refinement"],
     "gotchas": [
       "Need to filter 'Good Stocks' strictly by MaxWaste, not just percentage.",
-      "SheetJS read returns array of arrays, need parsing logic."
+      "SheetJS read returns array of arrays, need parsing logic.",
+      "Ensure statistical property names (totalStocks, totalLength, etc.) are synchronized between optimizer.js and export.js."
     ],
     "conventions": [
       "Use 'mm' for units",

@@ -88,7 +88,7 @@ class ExportManager {
       XLSX.utils.book_append_sheet(wb, wsResult, "Sơ Đồ Cắt");
 
       // --- SHEET 3: THỐNG KÊ CHI TIẾT (Statistics) ---
-      const stats = result.summary;
+      const stats = result;
 
       // B1: Thống kê số lượng từng loại phôi
       const stockBreakdown = {};
@@ -102,27 +102,27 @@ class ExportManager {
       statsData.push({ "Hạng mục": "TỔNG QUAN", "Giá trị": "", "Đơn vị": "" });
       statsData.push({
         "Hạng mục": "Tổng số thanh nhôm cần mua",
-        "Giá trị": stats.totalBars,
+        "Giá trị": stats.totalStocks,
         "Đơn vị": "thanh",
       });
       statsData.push({
         "Hạng mục": "Tổng chiều dài phôi nhập",
-        "Giá trị": (stats.totalStockLength / 1000).toFixed(2),
+        "Giá trị": (stats.totalLength / 1000).toFixed(2),
         "Đơn vị": "mét",
       });
       statsData.push({
         "Hạng mục": "Tổng chiều dài thành phẩm",
-        "Giá trị": (stats.totalUsedLength / 1000).toFixed(2),
+        "Giá trị": (stats.totalUsed / 1000).toFixed(2),
         "Đơn vị": "mét",
       });
       statsData.push({
         "Hạng mục": "Tổng phế liệu",
-        "Giá trị": (stats.totalWasteLength / 1000).toFixed(2),
+        "Giá trị": (stats.totalWaste / 1000).toFixed(2),
         "Đơn vị": "mét",
       });
       statsData.push({
         "Hạng mục": "Hiệu suất sử dụng",
-        "Giá trị": stats.efficiency.toFixed(2),
+        "Giá trị": stats.efficiency,
         "Đơn vị": "%",
       });
       statsData.push({ "Hạng mục": "", "Giá trị": "", "Đơn vị": "" }); // Spacer
@@ -262,6 +262,15 @@ class ExportManager {
     const hour = String(now.getHours()).padStart(2, "0");
     const minute = String(now.getMinutes()).padStart(2, "0");
     return `${year}${month}${day}_${hour}${minute}`;
+  }
+  /**
+   * Alias cho exportToExcel (để tương thích hoặc tránh gọi nhầm)
+   */
+  exportExcel(result) {
+    console.warn(
+      "Cảnh báo: Hàm exportExcel(result) đã cũ. Vui lòng dùng exportToExcel(items, result).",
+    );
+    this.exportToExcel([], result);
   }
 }
 
