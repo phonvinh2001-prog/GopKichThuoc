@@ -102,14 +102,14 @@ class App {
 
     // Mở modal
     btnImport.onclick = () => {
-      modal.style.display = "flex";
+      modal.classList.add("active");
       document.getElementById("pasteArea").focus();
     };
 
     // Đóng modal
-    closeBtn.onclick = () => (modal.style.display = "none");
+    closeBtn.onclick = () => modal.classList.remove("active");
     window.onclick = (e) => {
-      if (e.target == modal) modal.style.display = "none";
+      if (e.target == modal) modal.classList.remove("active");
     };
 
     // Tab switching
@@ -121,13 +121,13 @@ class App {
           .forEach((b) => b.classList.remove("active"));
         document
           .querySelectorAll(".tab-content")
-          .forEach((c) => (c.style.display = "none"));
+          .forEach((c) => c.classList.remove("active"));
 
         // Set active
         btn.classList.add("active");
         const tabId = btn.getAttribute("data-tab");
-        const map = { paste: "tabPaste", file: "tabFile" };
-        document.getElementById(map[tabId]).style.display = "block";
+        const targetId = tabId === "paste" ? "tabPaste" : "tabFile";
+        document.getElementById(targetId).classList.add("active");
       });
     });
 
@@ -135,7 +135,7 @@ class App {
     document.getElementById("btnProcessPaste").addEventListener("click", () => {
       const text = document.getElementById("pasteArea").value;
       this.processImportText(text);
-      modal.style.display = "none";
+      modal.classList.remove("active");
     });
 
     // Process File
@@ -165,9 +165,10 @@ class App {
 
     // Lưu config khi thay đổi
     ["kerf", "maxWaste", "minLength", "maxLength", "stepSize"].forEach((id) => {
-      document.getElementById(id).addEventListener("change", () => {
-        this.updateConfig();
-      });
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("change", () => this.updateConfig());
+      }
     });
   }
 
@@ -229,7 +230,7 @@ class App {
       alert(
         `Đã hoàn tất!\n- Thêm mới: ${addedCount}\n- Cập nhật số lượng: ${updatedCount}`,
       );
-      document.getElementById("importModal").style.display = "none";
+      document.getElementById("importModal").classList.remove("active");
       document.getElementById("pasteArea").value = "";
     } else {
       alert("Không có thay đổi nào được thực hiện.");
@@ -331,26 +332,31 @@ class App {
    * Cập nhật config từ UI
    */
   updateConfig() {
-    this.config.kerf = parseFloat(document.getElementById("kerf").value) || 5;
+    this.config.kerf = parseFloat(document.getElementById("kerf")?.value) || 5;
     this.config.maxWaste =
-      parseFloat(document.getElementById("maxWaste").value) || 500;
+      parseFloat(document.getElementById("maxWaste")?.value) || 500;
     this.config.minLength =
-      parseFloat(document.getElementById("minLength").value) || 3500;
+      parseFloat(document.getElementById("minLength")?.value) || 3500;
     this.config.maxLength =
-      parseFloat(document.getElementById("maxLength").value) || 6000;
+      parseFloat(document.getElementById("maxLength")?.value) || 6000;
     this.config.stepSize =
-      parseFloat(document.getElementById("stepSize").value) || 100;
+      parseFloat(document.getElementById("stepSize")?.value) || 100;
   }
 
   /**
    * Cập nhật UI config
    */
   updateConfigUI() {
-    document.getElementById("kerf").value = this.config.kerf;
-    document.getElementById("maxWaste").value = this.config.maxWaste;
-    document.getElementById("minLength").value = this.config.minLength;
-    document.getElementById("maxLength").value = this.config.maxLength;
-    document.getElementById("stepSize").value = this.config.stepSize;
+    if (document.getElementById("kerf"))
+      document.getElementById("kerf").value = this.config.kerf;
+    if (document.getElementById("maxWaste"))
+      document.getElementById("maxWaste").value = this.config.maxWaste;
+    if (document.getElementById("minLength"))
+      document.getElementById("minLength").value = this.config.minLength;
+    if (document.getElementById("maxLength"))
+      document.getElementById("maxLength").value = this.config.maxLength;
+    if (document.getElementById("stepSize"))
+      document.getElementById("stepSize").value = this.config.stepSize;
   }
 
   /**
@@ -388,7 +394,7 @@ class App {
   renderItems() {
     const container = document.getElementById("itemsList");
     if (this.items.length === 0) {
-      container.innerHTML = `<div class="empty-list">Chưa có chi tiết nào</div>`;
+      container.innerHTML = `<div class="empty-list" style="padding: 2rem; text-align: center; color: var(--text-muted); font-style: italic;">Chưa có chi tiết nào</div>`;
       return;
     }
 
@@ -400,8 +406,12 @@ class App {
                 <strong>${item.length}mm</strong> × ${item.quantity} thanh
             </div>
             <div class="item-actions">
-                <button class="item-edit" onclick="app.editItem(${index})" title="Sửa">✏️</button>
-                <button class="item-delete" onclick="app.deleteItem(${index})" title="Xóa">🗑️</button>
+                <button class="item-btn item-edit" onclick="app.editItem(${index})" title="Sửa">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button class="item-btn item-delete" onclick="app.deleteItem(${index})" title="Xóa">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
             </div>
         </div>
     `,
@@ -410,16 +420,12 @@ class App {
   }
 
   /**
-   * Render danh sách stocks
+   * Render danh sách stocks (tồn kho)
    */
   renderStocks() {
     const container = document.getElementById("stockList");
-    const stockList = document.getElementById("stockLength"); // Dùng để check empty? No.
-
-    // Filter stocks nhập tay (isExisting = true/false logic cũ là stock nhập từ kho?)
-    // Ở đây ta hiển thị stocks hiện có trong config/session
     if (this.stocks.length === 0) {
-      container.innerHTML = `<div class="empty-list">Chưa có thanh tồn kho</div>`;
+      container.innerHTML = ``;
       return;
     }
 
@@ -429,11 +435,14 @@ class App {
         <div class="item-row">
             <div class="item-info">
                 <strong>${stock.length}mm</strong> × ${stock.quantity} thanh
-                ${stock.note ? `<span class="note">(${stock.note})</span>` : ""}
             </div>
             <div class="item-actions">
-                <button class="item-edit" onclick="app.editStock(${index})" title="Sửa">✏️</button>
-                <button class="item-delete" onclick="app.deleteStock(${index})" title="Xóa">🗑️</button>
+                <button class="item-btn item-edit" onclick="app.editStock(${index})" title="Sửa">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 113 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                <button class="item-btn item-delete" onclick="app.deleteStock(${index})" title="Xóa">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
             </div>
         </div>
     `,
@@ -502,31 +511,6 @@ class App {
   deleteStock(index) {
     this.stocks.splice(index, 1);
     this.renderStocks();
-  }
-
-  /**
-   * Render danh sách stocks
-   */
-  renderStocks() {
-    const container = document.getElementById("stockList");
-
-    if (this.stocks.length === 0) {
-      container.innerHTML = "";
-      return;
-    }
-
-    container.innerHTML = this.stocks
-      .map(
-        (stock, index) => `
-            <div class="item-row">
-                <div class="item-info">
-                    <strong>${stock.length}mm</strong> × ${stock.quantity} thanh
-                </div>
-                <button class="item-delete" onclick="app.deleteStock(${index})">Xóa</button>
-            </div>
-        `,
-      )
-      .join("");
   }
 
   /**
@@ -619,10 +603,7 @@ class App {
     // Gộp các thanh giống nhau
     const groupedStocks = [];
     stocks.forEach((stock, originalIndex) => {
-      // Key để so sánh: chiều dài + danh sách cắt + loại (tồn kho/mới)
-      // JSON.stringify mảng cuts là cách đơn giản nhất để so sánh nội dung
       const matchDetails = JSON.stringify(stock.cuts);
-
       const existingGroup = groupedStocks.find(
         (g) =>
           g.stock.length === stock.length &&
@@ -646,44 +627,54 @@ class App {
       .map((group) => {
         const stock = group.stock;
         const usedLength = stock.cuts.reduce((sum, cut) => sum + cut, 0);
-        const usedPercent = (usedLength / stock.length) * 100;
-        const wastePercent = (stock.remaining / stock.length) * 100;
+        const efficiency = ((usedLength / stock.length) * 100).toFixed(1);
 
-        // Tạo label tiêu đề (VD: Thanh #1 - #5 (5 thanh))
+        // Tạo label tiêu đề
         let headerLabel = `Thanh #${group.indices[0]}`;
         if (group.count > 1) {
           const lastIndex = group.indices[group.indices.length - 1];
-          headerLabel = `Thanh #${group.indices[0]} ➝ #${lastIndex}`;
+          headerLabel = `Thanh #${group.indices[0]} – #${lastIndex}`;
         }
 
         let html = `
                 <div class="stock-item">
                     <div class="stock-header">
-                        <span class="stock-index">${headerLabel}</span>
-                        ${group.count > 1 ? `<span class="stock-count-badge">${group.count} thanh</span>` : ""}
-                        <span class="stock-specs">
-                            ${stock.length}mm 
-                            ${stock.isExisting ? "(Tồn kho)" : ""}
-                            - Phế liệu: ${stock.remaining.toFixed(1)}mm
-                        </span>
+                        <h4>${headerLabel} ${group.count > 1 ? `(${group.count} thanh)` : ""}</h4>
+                        <div class="stock-usage">
+                            ${stock.length}mm ${stock.isExisting ? "• Tồn kho" : ""} 
+                            <span style="color: var(--primary); margin-left: 8px;">Dùng: ${usedLength}mm (${efficiency}%)</span>
+                        </div>
                     </div>
                     <div class="stock-bar">
             `;
 
-        let currentPos = 0;
-        stock.cuts.forEach((cut, cutIndex) => {
+        // Tạo màu ngẫu nhiên nhưng cố định cho từng loại kích thước
+        const getColorClass = (len) => {
+          const hash = String(len)
+            .split("")
+            .reduce((a, b) => {
+              a = (a << 5) - a + b.charCodeAt(0);
+              return a & a;
+            }, 0);
+          return `segment-color-${Math.abs(hash) % 10}`;
+        };
+
+        stock.cuts.forEach((cut) => {
           const cutPercent = (cut / stock.length) * 100;
+          const colorClass = getColorClass(cut);
           html += `
-                    <div class="cut-segment" style="left: ${currentPos}%; width: ${cutPercent}%">
-                        ${cut}mm
+                    <div class="cut-segment ${colorClass}" style="width: ${cutPercent}%" title="Kích thước: ${cut}mm">
+                        ${cutPercent > 5 ? cut : ""}
                     </div>
                 `;
-          currentPos += cutPercent;
         });
 
         if (stock.remaining > 0) {
+          const wastePercent = (stock.remaining / stock.length) * 100;
           html += `
-                    <div class="waste-segment" style="width: ${wastePercent}%"></div>
+                    <div class="waste-segment" style="width: ${wastePercent}%" title="Phế liệu: ${stock.remaining.toFixed(1)}mm">
+                        ${wastePercent > 8 ? stock.remaining.toFixed(0) : ""}
+                    </div>
                 `;
         }
 
@@ -735,14 +726,25 @@ class App {
    * Render thống kê
    */
   renderStats(result) {
-    document.getElementById("efficiency").textContent = `${result.efficiency}%`;
-    document.getElementById("totalStocks").textContent =
-      `${result.totalStocks} thanh`;
-    document.getElementById("totalWaste").textContent =
-      `${result.totalWaste.toFixed(0)} mm`;
-    document.getElementById("optimalLength").textContent = result.optimalLength
-      ? `${result.optimalLength} mm`
-      : "N/A";
+    const statsArea = document.getElementById("statsArea");
+    statsArea.innerHTML = `
+        <div class="stat-card primary">
+            <div class="stat-label">Hiệu suất</div>
+            <div class="stat-value">${result.efficiency}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tổng thanh nhôm</div>
+            <div class="stat-value">${result.totalStocks}</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Tổng phế liệu</div>
+            <div class="stat-value">${result.totalWaste.toFixed(0)}mm</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Kích thước tối ưu</div>
+            <div class="stat-value">${result.optimalLength || "N/A"}mm</div>
+        </div>
+    `;
   }
 
   /**
@@ -797,12 +799,11 @@ class App {
   }
 
   /**
-   * Xóa tất cả
+   * Xử lý xóa tất cả
    */
   clearAll() {
-    if (!confirm("Bạn có chắc muốn xóa tất cả dữ liệu?")) {
+    if (!confirm("Bạn có chắc muốn xóa TOÀN BỘ dữ liệu (bao gồm cả Tồn kho)?"))
       return;
-    }
 
     this.items = [];
     this.stocks = [];
@@ -812,20 +813,24 @@ class App {
     this.renderStocks();
 
     // Reset result area
-    document.querySelector(".empty-state").style.display = "block";
-    document.getElementById("cuttingDiagram").style.display = "none";
-    document.getElementById("summaryTable").style.display = "none";
-    document.getElementById("warningsArea").style.display = "none";
+    if (document.querySelector(".empty-state"))
+      document.querySelector(".empty-state").style.display = "block";
+    if (document.getElementById("cuttingDiagram"))
+      document.getElementById("cuttingDiagram").style.display = "none";
+    if (document.getElementById("summaryTable"))
+      document.getElementById("summaryTable").style.display = "none";
+    if (document.getElementById("warningsArea"))
+      document.getElementById("warningsArea").style.display = "none";
 
     // Reset stats
-    document.getElementById("efficiency").textContent = "--%";
-    document.getElementById("totalStocks").textContent = "--";
-    document.getElementById("totalWaste").textContent = "-- mm";
-    document.getElementById("optimalLength").textContent = "-- mm";
+    const statsArea = document.getElementById("statsArea");
+    if (statsArea) statsArea.innerHTML = "";
 
     // Disable export buttons
-    document.getElementById("btnExportExcel").disabled = true;
-    document.getElementById("btnPrint").disabled = true;
+    if (document.getElementById("btnExportExcel"))
+      document.getElementById("btnExportExcel").disabled = true;
+    if (document.getElementById("btnPrint"))
+      document.getElementById("btnPrint").disabled = true;
 
     // Clear storage
     this.storage.clearData();

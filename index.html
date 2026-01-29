@@ -16,10 +16,24 @@
     <div class="container">
       <!-- Header -->
       <header class="header">
-        <h1>🔧 Tối Ưu Hóa Cắt Nhôm</h1>
-        <p class="subtitle">
-          Tính toán kích thước phôi nhôm tối ưu - Giảm thiểu phế liệu
-        </p>
+        <h1>
+          <svg
+            width="32"
+            height="32"
+            fill="none"
+            stroke="var(--primary)"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+            style="margin-top: -4px"
+          >
+            <path
+              d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a2 2 0 012.83 0l.3.3a2 2 0 010 2.83l-3.77 3.77a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a2 2 0 012.83 0l.3.3a2 2 0 010 2.83l-3.77 3.77a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0"
+            ></path>
+            <path d="M21 21l-6-6m-4 4L5 13m14-4L5 5"></path>
+          </svg>
+          GopKichThuoc
+        </h1>
+        <p class="subtitle">Hệ thống tối ưu hóa cắt nhôm chuyên nghiệp</p>
       </header>
 
       <!-- Main Content -->
@@ -27,158 +41,111 @@
         <!-- Left Panel: Input Form -->
         <section class="panel input-panel">
           <div class="panel-header">
-            <h2>📥 Nhập liệu</h2>
+            <h2>Thiết lập</h2>
             <div class="header-actions">
               <button
                 id="btnImport"
-                class="btn-secondary"
-                title="Nhập từ Excel/Copy"
+                class="btn btn-secondary"
+                title="Nhập dữ liệu"
               >
-                📂 Import
-              </button>
-              <button
-                id="btnClearItems"
-                class="btn-secondary"
-                title="Xóa tất cả danh sách"
-                style="color: #dc3545; border-color: #dc3545"
-              >
-                🗑️ Clear
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                  ></path>
+                </svg>
               </button>
               <button
                 id="btnSaveTemplate"
-                class="btn-secondary"
-                title="Lưu danh sách làm mẫu"
+                class="btn btn-secondary"
+                title="Lưu mẫu"
               >
-                💾 Lưu
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                  ></path>
+                </svg>
               </button>
-            </div>
-          </div>
-
-          <!-- Modal Import -->
-          <div id="importModal" class="modal" style="display: none">
-            <div class="modal-content">
-              <span class="close-modal">&times;</span>
-              <h3>📋 Nhập dữ liệu nhanh</h3>
-
-              <div class="import-tabs">
-                <button class="tab-btn active" data-tab="paste">
-                  📋 Dán nội dung
-                </button>
-                <button class="tab-btn" data-tab="file">📂 Chọn file</button>
-              </div>
-
-              <!-- Tab Paste -->
-              <div id="tabPaste" class="tab-content active">
-                <p class="hint">
-                  Copy từ Excel (Cột A: Chiều dài, Cột B: Số lượng) rồi dán vào
-                  đây:
-                </p>
-                <textarea
-                  id="pasteArea"
-                  rows="10"
-                  placeholder="Ví dụ:\n5300 15\n2050 18\n3250 90"
-                ></textarea>
-                <div class="action-buttons">
-                  <button id="btnProcessPaste" class="btn-primary">
-                    Nhập dữ liệu
-                  </button>
-                </div>
-              </div>
-
-              <!-- Tab File -->
-              <div id="tabFile" class="tab-content" style="display: none">
-                <div class="file-drop-area" id="dropZone">
-                  <p>Kéo thả file Excel/CSV vào đây hoặc</p>
-                  <input
-                    type="file"
-                    id="fileInput"
-                    accept=".xlsx, .xls, .csv"
-                  />
-                  <label for="fileInput" class="btn-secondary">Chọn File</label>
-                </div>
-                <p class="hint">File cần có cột "Chiều dài" và "Số lượng"</p>
-              </div>
+              <button
+                id="btnClearItems"
+                class="btn btn-secondary"
+                title="Xóa hết"
+                style="color: var(--danger)"
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  ></path>
+                </svg>
+              </button>
             </div>
           </div>
 
           <!-- Danh sách chi tiết -->
           <div class="form-group">
-            <label>Danh sách chi tiết</label>
+            <div class="section-title">Chi tiết sản phẩm</div>
             <div class="item-input-row">
-              <input
-                type="number"
-                id="itemLength"
-                placeholder="Chiều dài (mm)"
-                min="1"
-              />
-              <input
-                type="number"
-                id="itemQuantity"
-                placeholder="Số lượng"
-                min="1"
-              />
-              <button class="btn btn-add" onclick="app.addItem()">
-                + Thêm
-              </button>
+              <input type="number" id="itemLength" placeholder="Dài (mm)" />
+              <input type="number" id="itemQuantity" placeholder="SL" />
+              <button class="btn btn-add" onclick="app.addItem()">+</button>
             </div>
             <div id="itemsList" class="items-list"></div>
           </div>
 
-          <!-- Cài đặt -->
-          <div class="settings-section">
-            <h3>⚙️ Cài đặt</h3>
-
-            <div class="form-group">
-              <label>Mạch cắt (mm)</label>
-              <input type="number" id="kerf" value="5" min="0" step="0.1" />
-              <small>Độ dày lưỡi cưa</small>
-            </div>
-
-            <div class="form-group">
-              <label>Phế liệu tối đa cho phép (mm)</label>
-              <input type="number" id="maxWaste" value="500" min="0" />
-              <small>Ngưỡng cảnh báo phế liệu</small>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Min (mm)</label>
-                <input type="number" id="minLength" value="3500" min="1000" />
-              </div>
-              <div class="form-group">
-                <label>Max (mm)</label>
-                <input type="number" id="maxLength" value="6000" min="1000" />
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Bước nhảy (mm)</label>
-              <input type="number" id="stepSize" value="100" min="10" />
-              <small>Khoảng cách giữa các kích thước thử</small>
-            </div>
-          </div>
-
           <!-- Quản lý tồn kho -->
           <div class="inventory-section">
-            <h3>📦 Tồn kho (Thanh cụt)</h3>
+            <div class="section-title">Thanh tồn kho (Tùy chọn)</div>
             <div class="item-input-row">
-              <input
-                type="number"
-                id="stockLength"
-                placeholder="Chiều dài (mm)"
-                min="1"
-              />
-              <input
-                type="number"
-                id="stockQuantity"
-                placeholder="Số lượng"
-                min="1"
-              />
-              <button class="btn btn-secondary" onclick="app.addStock()">
-                + Thêm tồn
-              </button>
+              <input type="number" id="stockLength" placeholder="Dài (mm)" />
+              <input type="number" id="stockQuantity" placeholder="SL" />
+              <button class="btn btn-add" onclick="app.addStock()">+</button>
             </div>
             <div id="stockList" class="items-list"></div>
+          </div>
+
+          <!-- Cài đặt thuật toán -->
+          <div class="settings-section">
+            <div class="section-title">Cài đặt nâng cao</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Mạch cắt (mm)</label>
+                <input type="number" id="kerf" value="5" />
+              </div>
+              <div class="form-group">
+                <label>Phế liệu tối đa (mm)</label>
+                <input type="number" id="maxWaste" value="500" />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Dài Min (mm)</label>
+                <input type="number" id="minLength" value="3500" />
+              </div>
+              <div class="form-group">
+                <label>Dài Max (mm)</label>
+                <input type="number" id="maxLength" value="6000" />
+              </div>
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -187,43 +154,27 @@
               🧮 Tính toán
             </button>
             <button class="btn btn-secondary" onclick="app.clearAll()">
-              🗑️ Xóa tất cả
+              Làm mới
             </button>
           </div>
         </section>
 
         <!-- Middle Panel: Results -->
         <section class="panel result-panel">
-          <h2>📊 Kết quả</h2>
+          <div class="panel-header">
+            <h2>Sơ đồ cắt tối ưu</h2>
+          </div>
           <div id="resultArea" class="result-area">
             <div class="empty-state">
-              <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="50"
-                  stroke="#e0e0e0"
-                  stroke-width="4"
-                />
-                <path
-                  d="M40 60h40M60 40v40"
-                  stroke="#e0e0e0"
-                  stroke-width="4"
-                  stroke-linecap="round"
-                />
-              </svg>
-              <p>Nhập dữ liệu và nhấn "Tính toán" để xem kết quả</p>
+              <p>Chưa có kết quả tính toán</p>
             </div>
           </div>
 
-          <!-- Cutting Diagram -->
           <div
             id="cuttingDiagram"
             class="cutting-diagram"
             style="display: none"
           ></div>
-
-          <!-- Summary Table -->
           <div
             id="summaryTable"
             class="summary-table"
@@ -233,49 +184,33 @@
 
         <!-- Right Panel: Statistics & Actions -->
         <section class="panel stats-panel">
-          <h2>📈 Thống kê</h2>
-          <div id="statsArea" class="stats-area">
-            <div class="stat-card">
-              <div class="stat-label">Hiệu suất</div>
-              <div class="stat-value" id="efficiency">--%</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Tổng phôi cần đặt</div>
-              <div class="stat-value" id="totalStocks">--</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Tổng phế liệu</div>
-              <div class="stat-value" id="totalWaste">-- mm</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">Kích thước tối ưu</div>
-              <div class="stat-value" id="optimalLength">-- mm</div>
-            </div>
+          <div class="panel-header">
+            <h2>Hiệu số & Báo cáo</h2>
           </div>
 
-          <!-- Efficiency Chart -->
-          <div class="chart-container">
-            <canvas id="efficiencyChart"></canvas>
+          <div id="statsArea" class="stats-area">
+            <!-- Stats populated by JS -->
           </div>
 
           <!-- Export Actions -->
           <div class="export-section">
-            <h3>📤 Xuất dữ liệu</h3>
+            <div class="section-title" style="margin-top: 2rem">Hành động</div>
             <button
               class="btn btn-success"
               onclick="app.exportExcel()"
               disabled
               id="btnExportExcel"
             >
-              📄 Xuất Excel
+              📄 Xuất Excel báo cáo
             </button>
             <button
               class="btn btn-secondary"
               onclick="app.printResults()"
               disabled
               id="btnPrint"
+              style="width: 100%; margin-top: 0.5rem"
             >
-              🖨️ In ấn
+              🖨️ In sơ đồ (PDF)
             </button>
           </div>
 
@@ -286,6 +221,52 @@
             style="display: none"
           ></div>
         </section>
+      </div>
+
+      <!-- Modal Import -->
+      <div id="importModal" class="modal">
+        <div class="modal-content">
+          <span class="close-modal">&times;</span>
+          <div class="section-title">Nhập dữ liệu nhanh</div>
+
+          <div class="import-tabs">
+            <button class="tab-btn active" data-tab="paste">
+              📋 Dán Excel
+            </button>
+            <button class="tab-btn" data-tab="file">📂 Chọn File</button>
+          </div>
+
+          <!-- Tab Paste -->
+          <div id="tabPaste" class="tab-content active">
+            <p class="hint">
+              Copy và dãn dữ liệu (Dài - Số lượng) từ Excel vào đây:
+            </p>
+            <textarea
+              id="pasteArea"
+              rows="8"
+              placeholder="5300 15&#10;2050 18&#10;3250 90"
+            ></textarea>
+            <div style="margin-top: var(--spacing-md); text-align: right">
+              <button id="btnProcessPaste" class="btn btn-primary">
+                Xử lý ngay
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab File -->
+          <div id="tabFile" class="tab-content">
+            <div class="file-drop-area" id="dropZone">
+              <p>Thả file Excel (.xlsx) vào đây hoặc</p>
+              <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" />
+              <label
+                for="fileInput"
+                class="btn btn-secondary"
+                style="margin-top: 1rem"
+                >Chọn File từ máy</label
+              >
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
