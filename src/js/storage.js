@@ -18,8 +18,9 @@ class StorageManager {
    */
   saveData(data) {
     try {
-      const jsonData = JSON.stringify(data);
-      localStorage.setItem(this.STORAGE_KEY, jsonData);
+      const previous = this.loadData();
+      const jsonData = JSON.stringify({ ...data, history: data.history || previous.history || [] });
+      localStorage.setItem(this.KEYS.DATA, jsonData);
       return true;
     } catch (error) {
       console.error("Lỗi khi lưu dữ liệu:", error);
@@ -32,9 +33,11 @@ class StorageManager {
    */
   loadData() {
     try {
-      const jsonData = localStorage.getItem(this.STORAGE_KEY);
+      const jsonData = localStorage.getItem(this.KEYS.DATA) ?? localStorage.getItem("undefined");
       if (jsonData) {
-        return JSON.parse(jsonData);
+        const parsed=JSON.parse(jsonData);
+        if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return this.getDefaultData();
+        return {...this.getDefaultData(),...parsed,items:Array.isArray(parsed.items)?parsed.items:[],stocks:Array.isArray(parsed.stocks)?parsed.stocks:[],config:{...this.getDefaultData().config,...parsed.config}};
       }
       return this.getDefaultData();
     } catch (error) {
@@ -89,16 +92,16 @@ class StorageManager {
    * Lưu Template mẫu
    */
   saveTemplate(name, items) {
-    const templates = this.getTemplates();
-    templates[name] = items;
-    localStorage.setItem(this.KEYS.TEMPLATES, JSON.stringify(templates));
+    try{const templates = this.getTemplates();
+    Object.defineProperty(templates,name,{value:items,enumerable:true,configurable:true,writable:true});
+    localStorage.setItem(this.KEYS.TEMPLATES, JSON.stringify(templates));return true;}catch(error){console.error('Không lưu được mẫu:',error);return false;}
   }
 
   /**
    * Lấy danh sách Templates
    */
   getTemplates() {
-    return JSON.parse(localStorage.getItem(this.KEYS.TEMPLATES)) || {};
+    try{const value=JSON.parse(localStorage.getItem(this.KEYS.TEMPLATES));return value&&typeof value==='object'&&!Array.isArray(value)?value:{};}catch{return {};}
   }
 
   /**
@@ -106,7 +109,8 @@ class StorageManager {
    */
   clearData() {
     try {
-      localStorage.removeItem(this.STORAGE_KEY);
+      localStorage.removeItem(this.KEYS.DATA);
+      localStorage.removeItem("undefined");
       return true;
     } catch (error) {
       console.error("Lỗi khi xóa dữ liệu:", error);
@@ -154,3 +158,4 @@ class StorageManager {
 
 // Export
 window.StorageManager = StorageManager;
+

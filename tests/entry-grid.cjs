@@ -1,0 +1,18 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const elements=new Map(),node=id=>{if(!elements.has(id))elements.set(id,{textContent:'',innerHTML:'',disabled:false,hidden:false});return elements.get(id);};
+const ctx={window:{},document:{addEventListener(){},getElementById:node,querySelector(){return null;}},console};vm.createContext(ctx);
+for(const f of ['optimizer','storage','export','app','production','custom-stock','workspace','entry-grid'])vm.runInContext(fs.readFileSync(`src/js/${f}.js`,'utf8'),ctx);
+const run=s=>vm.runInContext(s,ctx);
+let parsed=run("readEntryDrafts([{length:'1500',quantity:'124'},{length:'2250,5',quantity:'2'},{length:'',quantity:''},{length:'3580',quantity:''}])");assert.equal(parsed.valid.length,2);assert.equal(parsed.valid[1].length,2250.5);assert.equal(parsed.errors[0],4);
+parsed=run("readEntryDrafts([{length:'1',quantity:'1.5'},{length:'-1',quantity:'2'}])");assert.equal(parsed.errors.length,2);
+ctx.pasteText='1500\t124\r\n3580\t12';assert.equal(run('parseGridPaste(pasteText).length'),2);
+run("globalThis.a=new App();a.invalidateResult=()=>{};a.persist=()=>{};a.notify=(message)=>{a.message=message;};a.entryDrafts={items:[{length:'',quantity:''}],stocks:[]};a.drawEntryGrid=function(){this.drawn=true};a.entrySummary=()=>{};");
+ctx.fakeInput={value:'1500',closest:()=>({classList:{toggle(){}}})};run("a.gridInput('items',0,0,fakeInput)");assert.equal(run('a.items.length'),0);assert.equal(run('a.entryDrafts.items[0].length'),'1500');
+ctx.fakeInput.value='124';run("a.gridInput('items',0,1,fakeInput)");assert.equal(run('a.items[0].quantity'),124);
+ctx.event={clipboardData:{getData:()=> '3580\t12\n2250\t32'},preventDefault(){}};run("a.gridPaste(event,'items',1,0)");assert.equal(run('a.items.length'),3);assert.equal(run('a.items[2].quantity'),32);
+ctx.event={clipboardData:{getData:()=> 'bad\t5'},preventDefault(){}};run("a.gridPaste(event,'items',1,0)");assert.equal(run('a.entryDrafts.items[1].length'),'bad');assert.equal(run('a.items.length'),2);
+run('a.calculate()');assert(run('a.message').includes('dòng 2'));
+ctx.event={key:'Enter',shiftKey:false,preventDefault(){}};run("a.gridKey(event,'items',2,1)");assert.equal(run('a.entryDrafts.items.length'),4);
+const saved=JSON.parse(run('JSON.stringify(a.getCurrentData())'));assert.equal(saved.entryDrafts.items[1].length,'bad');
+run("a.gridDelete('items',1)");assert.equal(run('a.items.length'),2);assert.equal(JSON.parse(run('a.undoData')).entryDrafts.items[1].length,'bad');
+console.log('PASS: raw drafts, invalid rows, decimals, direct paste, overwrite position, calculation blocking, auto-row, autosave data, undo snapshot');

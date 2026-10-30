@@ -925,3 +925,13 @@ textarea:focus {
     color: var(--text-primary);
   }
 }
+
+
+/* Production cards and searchable whole-lot printing */
+select {width:100%; padding:10px; margin:8px 0 14px; border:1px solid #cbd5e1; border-radius:8px; background:white; color:#172033;}
+.production-search {padding:16px;}
+.production-search input {width:100%;margin-top:8px;}
+.production-pattern {break-inside:avoid;}
+.production-pattern p {line-height:1.7;margin:8px 0;}
+.search-hidden {display:none;}
+@media print {.production-search {display:none!important;} .production-pattern.search-hidden {display:block!important;} .production-pattern {break-inside:avoid; page-break-inside:avoid;}}

@@ -40,3 +40,4 @@
 - Basic optimization logic (First Fit Decreasing).
 - Single stock optimization.
 - Basic UI & Export functionality.
+

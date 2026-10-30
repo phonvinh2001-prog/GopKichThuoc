@@ -561,3 +561,4 @@ class CuttingOptimizer {
 
 // Export để sử dụng trong app.js
 window.CuttingOptimizer = CuttingOptimizer;
+

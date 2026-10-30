@@ -317,7 +317,7 @@ class App {
     if (newQuantity.trim() === "") newQuantity = item.quantity; // Keep old if empty
 
     const l = parseFloat(newLength);
-    const q = parseInt(newQuantity);
+    const q = Number(newQuantity);
 
     if (!l || !q || l <= 0 || q <= 0) {
       alert("Giá trị không hợp lệ! Vui lòng nhập số dương.");
@@ -364,7 +364,7 @@ class App {
    */
   addItem() {
     const length = parseFloat(document.getElementById("itemLength").value);
-    const quantity = parseInt(document.getElementById("itemQuantity").value);
+    const quantity = Number(document.getElementById("itemQuantity").value);
 
     if (!length || !quantity || length <= 0 || quantity <= 0) {
       alert("Vui lòng nhập chiều dài và số lượng hợp lệ");
@@ -472,7 +472,7 @@ class App {
     if (newQuantity.trim() === "") newQuantity = stock.quantity;
 
     const l = parseFloat(newLength);
-    const q = parseInt(newQuantity);
+    const q = Number(newQuantity);
 
     if (!l || !q || l <= 0 || q <= 0) {
       alert("Giá trị không hợp lệ!");
@@ -489,7 +489,7 @@ class App {
    */
   addStock() {
     const length = parseFloat(document.getElementById("stockLength").value);
-    const quantity = parseInt(document.getElementById("stockQuantity").value);
+    const quantity = Number(document.getElementById("stockQuantity").value);
 
     if (!length || !quantity || length <= 0 || quantity <= 0) {
       alert("Vui lòng nhập chiều dài và số lượng hợp lệ");
@@ -527,8 +527,8 @@ class App {
     this.updateConfig();
 
     // Validate config
-    if (this.config.minLength >= this.config.maxLength) {
-      alert("Min phải nhỏ hơn Max");
+    if (this.config.stockMode !== 'fixed' && this.config.minLength > this.config.maxLength) {
+      alert("Min phải nhỏ hơn hoặc bằng Max");
       return;
     }
 
@@ -539,6 +539,13 @@ class App {
       // Delay nhỏ để UI update
       await new Promise((resolve) => setTimeout(resolve, 100));
 
+      // Recheck after the paint delay: users may edit drafts or settings meanwhile.
+      this.updateConfig();
+      if(this.entryDrafts)for(const kind of ['items','stocks']){
+        const parsed=readEntryDrafts(this.entryDrafts[kind]||[]);
+        if(parsed.errors.length)throw new Error('Dữ liệu vừa thay đổi và còn dòng lỗi. Hoàn tất rồi tính lại.');
+        this[kind]=parsed.valid;
+      }
       // Tính toán
       const result = this.optimizer.optimize(
         this.items,
@@ -843,3 +850,4 @@ document.addEventListener("DOMContentLoaded", () => {
   window.app = app;
   app.init();
 });
+

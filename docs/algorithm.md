@@ -216,3 +216,4 @@ if (efficiency < 80%) {
 1. **Early termination**: Dừng nếu đạt hiệu suất 95%+
 2. **Caching**: Lưu kết quả đã tính
 3. **Parallel search**: Thử nhiều kích thước song song (Web Workers)
+
