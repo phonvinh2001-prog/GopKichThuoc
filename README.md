@@ -1,6 +1,6 @@
 # GopKichThuoc — Lập kế hoạch phôi và phiếu cắt
 
-Phiên bản 1.7.0. Gộp kích thước nhỏ khách đặt thành phôi thuận tiện cho nhà máy, sau đó lập mẫu cắt lặp cho thợ.
+Phiên bản 1.8.0. Gộp kích thước nhỏ khách đặt thành phôi thuận tiện cho nhà máy, sau đó lập mẫu cắt lặp cho thợ.
 
 ## Chạy ứng dụng
 
@@ -34,7 +34,7 @@ Ví dụ 1500×124, 3580×12, 2250×32, Min=2000, Max=6000, kerf=5, làm tròn=1
 
 ## Kiểm tra và giới hạn
 
-Bảy bộ kiểm tra Node và kiểm tra cú pháp JavaScript; CI tự chạy trên push/PR. Bao gồm bảo toàn số lượng, cân bằng chiều dài, 3 chế độ phôi, giới hạn mẫu, lỗi nhập, chuyển chế độ, bản nháp, hoàn tác, nhập bổ sung, lưu trữ lỗi và thay đổi dữ liệu trong lúc tính. Xuất workbook được kiểm tra bằng mock; chưa xác nhận bằng Excel thật hoặc thử cắt tại xưởng. Chưa xác nhận trực quan trên trình duyệt trong môi trường hiện tại.
+Chín bộ kiểm tra Node và kiểm tra cú pháp JavaScript; CI tự chạy trên push/PR. Bao gồm bảo toàn số lượng, cân bằng chiều dài, 3 chế độ phôi, giới hạn mẫu, lỗi nhập, chuyển chế độ, bản nháp, hoàn tác, nhập bổ sung, lưu trữ lỗi và thay đổi dữ liệu trong lúc tính. Xuất workbook được kiểm tra bằng mock; chưa xác nhận bằng Excel thật hoặc thử cắt tại xưởng. Chưa xác nhận trực quan trên trình duyệt trong môi trường hiện tại.
 
 Thuật toán heuristic, không bảo đảm tối ưu toàn cục. Giới hạn 20000 chi tiết/thanh và 1001 điểm lưới ở chế độ khoảng. Phôi dài Min/Max phải phù hợp năng lực nhà máy và máy cắt.
 
@@ -51,3 +51,11 @@ Chi tiết lịch sử thay đổi: UPGRADE.md. Tài liệu docs/algorithm.md v�
 - tests/: bộ kiểm tra không cần dependency
 
 MIT.
+
+## Hiển thị và cảnh báo 1.8
+Cảnh báo dùng cùng mã mẫu A01… với phiếu cắt và Excel; nhấn mã để đến mẫu (tự bỏ lọc tìm kiếm). Bảng cảnh báo luôn áp dụng toàn bộ lô. Chỉ đánh dấu khi đoạn dư mỗi thanh vượt ngưỡng mm đã đặt; tại ngưỡng thì không báo. Không trộn số thứ tự thanh với mã mẫu. Mỗi mẫu hiển thị phôi, số thanh lặp, công thức cắt và dư mỗi thanh; sản lượng/thông số có thể mở rộng. Khi in, sản lượng vẫn có trên phiếu. Không lặp bảng mua mới; bảng bổ sung chỉ dành cho thanh tồn.
+
+## Phiếu in và cài đặt nhanh
+Phiếu in A4 riêng gồm bảng đầu vào, bảng đặt phôi, cảnh báo theo mẫu và hướng dẫn cắt. Chữ đen, bảng có viền và sơ đồ SVG không phụ thuộc tùy chọn in nền. Khi in, trang nhập và giao diện màn hình được ẩn. Tắt Đầu trang/chân trang trong hộp thoại trình duyệt nếu không muốn URL/ngày tự động. Bố cục và nội dung có kiểm tra bằng mã; chưa xác nhận ảnh PDF thực tế trong môi trường hiện tại.
+
+Cài đặt sản xuất đã lưu: nhập tên rồi Lưu / cập nhật. Lần sau chọn tên và Áp dụng; dùng lại tên cũ để cập nhật. Chỉ lưu thông số sản xuất, không lưu kích thước khách. Cài đặt lưu trên trình duyệt hiện tại và cùng địa chỉ ứng dụng, chưa đồng bộ sang máy khác. Áp dụng sẽ yêu cầu tính lại.

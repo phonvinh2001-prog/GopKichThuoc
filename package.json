@@ -1,6 +1,6 @@
 {
   "name": "gop-kich-thuoc-nhom",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Hệ thống tối ưu hóa cắt nhôm - Tính toán kích thước phôi nhôm tối ưu",
   "main": "index.html",
   "scripts": {

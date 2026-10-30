@@ -10,6 +10,18 @@ function productionPatterns(stocks) {
   return [...groups.values()].sort((a,b)=>b.count-a.count || b.length-a.length)
     .map((s,i)=>({...s,id:`A${String(i+1).padStart(2,'0')}`}));
 }
+function patternWarnings(result,config){
+  const warnings=result.patterns.filter(p=>p.remaining>config.maxWaste+1e-7).map(p=>({
+    type:'warning',patternId:p.id,count:p.count,remaining:p.remaining,
+    percent:100*p.remaining/p.length,totalRemaining:p.remaining*p.count,
+    message:`${p.id}: ${p.count} thanh, dư ${p.remaining} mm/thanh.`
+  }));
+  const types=new Set(result.stocks.filter(s=>!s.isExisting).map(s=>s.length)).size;
+  if(config.stockMode==='custom'&&types>config.maxStockTypes)warnings.push({type:'info',message:`${types} loại phôi; mục tiêu ${config.maxStockTypes}.`});
+  return warnings;
+}
+// Warnings are computed only after the final pattern IDs and totals exist.
+CuttingOptimizer.prototype.generateWarnings=function(){return [];};
 
 CuttingOptimizer.prototype.optimize = function(items, config, inventory=[]) {
   const c = {stockMode:'custom',fixedLength:6000,endAllowance:0,orderIncrement:1,mergeTolerance:0,...config};
@@ -68,15 +80,16 @@ CuttingOptimizer.prototype.optimize = function(items, config, inventory=[]) {
     result=this.combineResults(used,best,this.expandItems(items).length,c);
   }
   result.patterns=productionPatterns(result.stocks);
+  result.inputItems=items.map(i=>({...i}));
   result.allowanceLoss=result.stocks.reduce((sum,s)=>sum+(s.allowance||0),0);
   result.kerfLoss=result.totalLength-result.totalUsed-result.totalWaste-result.allowanceLoss;
-  if(c.stockMode==='custom'&&new Set(result.stocks.filter(s=>!s.isExisting).map(s=>s.length)).size>c.maxStockTypes)result.warnings.push({type:'warning',message:'Số loại phôi vượt mục tiêu. Tăng khoảng gộp chiều dài hoặc điều chỉnh giới hạn chi tiết/mẫu; tool giữ mức dư đã chọn thay vì ép tăng phế liệu.'});
   result.efficiency=(100*result.totalUsed/result.totalLength).toFixed(2);
   result.newStocks=result.stocks.filter(s=>!s.isExisting).length;
   result.config={...c};
   result.summary=[];
   for(const s of result.stocks){let r=result.summary.find(r=>r.length===s.length && r.isExisting===s.isExisting);
     if(!r){r={length:s.length,isExisting:s.isExisting,quantity:0};result.summary.push(r);}r.quantity++;}
+  result.warnings=patternWarnings(result,c);
   this.results=result; return result;
 };
 CuttingOptimizer.prototype.productionStockSearch=function(items,c,limit){
@@ -162,6 +175,7 @@ ExportManager.prototype.exportToExcel=function(items,r){
   add('Mua mới',r.summary.filter(s=>!s.isExisting).map(s=>({'Phôi mm':s.length,'Số thanh':s.quantity})));
   add('Xuất tồn',r.summary.filter(s=>s.isExisting).map(s=>({'Phôi mm':s.length,'Số thanh':s.quantity})));
   add('Tra cứu',r.patterns.flatMap(g=>[...new Set(g.cuts)].map(l=>({'Dài mm':l,'Mã mẫu':g.id,'SL mỗi thanh':g.cuts.filter(x=>x===l).length,'Tổng SL':g.cuts.filter(x=>x===l).length*g.count}))));
+  add('Cảnh báo',r.warnings.map(w=>({'Mã mẫu':w.patternId||'','Số thanh':w.count??'','Dư mỗi thanh mm':w.remaining??'','Dư %':w.percent??'','Nội dung':w.message})));
   add('Thông số',[{...r.config,'Quy tắc kerf':'Giữa các đoạn n−1; dư gia công dự phòng khai báo riêng','Tỷ lệ thành phẩm %':Number(r.efficiency),'Dư mm':r.totalWaste,'Kerf mm':r.kerfLoss}]);
   XLSX.writeFile(wb,'Phieu_Cat_San_Xuat.xlsx');
 };

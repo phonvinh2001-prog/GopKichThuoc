@@ -60,3 +60,9 @@ CSS label display:block đã ghi đè hidden. Thêm quy tắc [hidden] display:n
 
 ## 1.7 — Rà soát trước khi đưa lên GitHub
 Giữ dòng nhập dở khi nhập bổ sung Excel, báo đúng khi không lưu được, đọc dữ liệu legacy khóa undefined và phục hồi khi JSON lỗi. Kiểm tra lại bản nháp/cấu hình sau khoảng chờ cập nhật UI trước khi tính. Không để thông số đang bị vô hiệu ở chế độ khác chặn tính. Chặn lưu mẫu thiếu dữ liệu. Thêm kiểm tra hồi quy và CI, README thống nhất với hành vi hiện tại.
+
+## 1.8 — Cảnh báo khớp mẫu và rút gọn màn hình
+Thay cảnh báo theo thanh # bằng mã mẫu A, cùng nguồn dữ liệu với phiếu và Excel. Ngưỡng dư mm/thanh thống nhất giữa bảng cảnh báo và màu mẫu. Link đến mẫu tự xóa bộ lọc. Cảnh báo đặt phía trên danh sách, rút thành bảng số liệu. Mẫu cắt có đầu mục, số thanh, công thức và dư; thông tin sản lượng/kerf/dự phòng thu gọn, sản lượng vẫn hiện khi in. Bỏ bảng đặt hàng lặp, thống kê phụ gộp trong mục mở rộng. Thêm sheet Cảnh báo và bộ kiểm tra đối chiếu mẫu–cảnh báo–Excel.
+
+### Bổ sung phiếu in và cài đặt nhanh trong 1.8
+Phiếu A4 riêng, có kích thước và số lượng đầu vào theo ảnh chụp dữ liệu lúc tính. Sơ đồ SVG đen trắng, bảng số chi tiết/thanh và sản lượng cả mẫu. Tách trang hướng dẫn cắt, tránh ngắt giữa mẫu thông thường. Thêm bộ cài đặt có tên, lưu/cập nhật và chọn áp dụng lại; giữ nguyên đầu vào khách. Kiểm tra nội dung phiếu và lưu/áp dụng cài đặt, chưa xác nhận ảnh PDF thực tế.
