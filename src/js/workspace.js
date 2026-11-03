@@ -90,6 +90,23 @@ function syncStockModeUI(){
   document.getElementById('stepSize').disabled=mode!=='standard';
   document.getElementById('endAllowance').disabled=mode==='standard';
   for(const id of ['orderIncrement','mergeTolerance'])document.getElementById(id).disabled=!custom;
-  document.getElementById('modeHint').textContent=fixed?'Phôi mới dùng đúng chiều dài cố định. Trừ dư gia công trước khi xếp; giữ giới hạn loại chi tiết/mẫu và báo đoạn dư.':custom?'Tạo mẫu ghép trước, tính chiều dài phôi sau. Ưu tiên ít dư, mẫu lặp và cùng loại; mục tiêu số loại phôi chỉ cảnh báo.':'Chọn phôi trên lưới Min–Max theo bước phôi, giới hạn số loại phôi mới.';
+  document.getElementById('rangeLengthFields').hidden=fixed;
+  document.getElementById('endAllowanceField').hidden=mode==='standard';
+  document.getElementById('customOrderFields').hidden=!custom;
+  document.getElementById('stepSizeField').hidden=mode!=='standard';
+  document.getElementById('maxStockTypesField').hidden=fixed;
+  document.getElementById('stockTypeHint').hidden=fixed;
+  document.getElementById('maxStockTypesLabel').textContent=custom?'Mục tiêu số loại phôi':'Tối đa số loại phôi';
+  document.getElementById('stockTypeHint').textContent=custom?'Chỉ cảnh báo khi vượt mục tiêu; không ép tăng dư.':'Giới hạn số chiều dài phôi mới được sử dụng.';
+  const simple=document.getElementById('productionMode').value!=='material';
+  document.getElementById('maxTypesField').hidden=!simple;document.getElementById('maxTypes').disabled=!simple;
+  document.getElementById('modeHint').textContent=(fixed?'Phôi mới giữ đúng chiều dài đã nhập.':custom?'Tính chiều dài đặt từ các mẫu ghép trong giới hạn phôi.':'Chọn phôi theo khoảng và bước chiều dài.')+(!simple?' Không giới hạn loại chi tiết trong mỗi mẫu.':'');
+  const number=id=>{const raw=document.getElementById(id).value;return raw!==''&&Number.isFinite(Number(raw))?Number(raw).toLocaleString('vi-VN'):'chưa nhập';};
+  const extra=[`Mạch cắt ${number('kerf')} mm`];
+  if(mode!=='standard')extra.push(`Dự phòng ${number('endAllowance')} mm`);
+  if(custom){extra.push(`Làm tròn ${number('orderIncrement')} mm`);if(Number(document.getElementById('mergeTolerance').value)>0)extra.push(`Gộp ≤ ${number('mergeTolerance')} mm`);}
+  if(mode==='standard')extra.push(`Bước phôi ${number('stepSize')} mm`);
+  extra.push(`Báo dư > ${number('maxWaste')} mm`);
+  document.getElementById('advancedSettingsSummary').textContent=extra.join(' · ');
 }
-App.prototype.setupEventListeners=function(){setupCustomInputs.call(this);syncStockModeUI();for(const event of ['input','change'])document.getElementById('stockMode').addEventListener(event,syncStockModeUI);};
+App.prototype.setupEventListeners=function(){setupCustomInputs.call(this);syncStockModeUI();for(const id of ['stockMode','productionMode','kerf','endAllowance','orderIncrement','mergeTolerance','stepSize','maxWaste'])for(const event of ['input','change'])document.getElementById(id).addEventListener(event,syncStockModeUI);};

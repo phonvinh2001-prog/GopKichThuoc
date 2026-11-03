@@ -24,7 +24,8 @@ StorageManager.prototype.saveProductionPreset=function(name,config){
 };
 App.prototype.refreshProductionPresets=function(selected=''){
   const select=document.getElementById('productionPreset');select.innerHTML='<option value="">Chọn bộ cài đặt…</option>';
-  for(const row of this.storage.getProductionPresets()){const option=document.createElement('option');option.value=row.name;option.textContent=row.name;select.append(option);}
+  const presets=this.storage.getProductionPresets();document.getElementById('savedSettingsBox').hidden=!presets.length;
+  for(const row of presets){const option=document.createElement('option');option.value=row.name;option.textContent=row.name;select.append(option);}
   select.value=selected;document.getElementById('applyProductionPreset').disabled=!selected;
 };
 App.prototype.saveProductionPreset=function(){

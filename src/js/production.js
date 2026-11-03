@@ -135,7 +135,7 @@ App.prototype.updateConfig=function(){
   for(const id of ['endAllowance','orderIncrement','mergeTolerance'])this.config[id]=Number(document.getElementById(id).value);
 };
 const baseUI=App.prototype.updateConfigUI;
-App.prototype.updateConfigUI=function(){baseUI.call(this);document.getElementById('productionMode').value=this.config.productionMode||'simple';document.getElementById('maxTypes').value=this.config.maxTypes||2;document.getElementById('maxStockTypes').value=this.config.maxStockTypes??3;
+App.prototype.updateConfigUI=function(){baseUI.call(this);document.getElementById('productionMode').value=this.config.productionMode||'simple';document.getElementById('productionMode').value=this.config.productionMode||'simple';document.getElementById('maxTypes').value=this.config.maxTypes||2;document.getElementById('maxStockTypes').value=this.config.maxStockTypes??3;
   document.getElementById('stockMode').value=this.config.stockMode||'custom';document.getElementById('fixedLength').value=this.config.fixedLength??6000;
   for(const id of ['endAllowance','orderIncrement','mergeTolerance'])document.getElementById(id).value=this.config[id]??(id==='orderIncrement'?1:0);};
 App.prototype.invalidateResult=function(){

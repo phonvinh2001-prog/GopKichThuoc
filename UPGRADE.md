@@ -66,3 +66,6 @@ Thay cảnh báo theo thanh # bằng mã mẫu A, cùng nguồn dữ liệu vớ
 
 ### Bổ sung phiếu in và cài đặt nhanh trong 1.8
 Phiếu A4 riêng, có kích thước và số lượng đầu vào theo ảnh chụp dữ liệu lúc tính. Sơ đồ SVG đen trắng, bảng số chi tiết/thanh và sản lượng cả mẫu. Tách trang hướng dẫn cắt, tránh ngắt giữa mẫu thông thường. Thêm bộ cài đặt có tên, lưu/cập nhật và chọn áp dụng lại; giữ nguyên đầu vào khách. Kiểm tra nội dung phiếu và lưu/áp dụng cài đặt, chưa xác nhận ảnh PDF thực tế.
+
+## 1.9 — Rút gọn thông số đầu vào
+Chuyển thông số ít dùng vào phần nâng cao mặc định đóng. Phần chính chỉ gồm cách cấp phôi, chiều dài hoặc khoảng Min–Max, giới hạn loại chi tiết/mẫu. Ẩn trường không áp dụng theo chế độ, ghi rõ mục tiêu số loại phôi ở đặt riêng là cảnh báo còn theo khoảng là giới hạn. Thêm tóm tắt thông số máy đang áp dụng. Tách lưu tên bộ cài đặt vào mục mở rộng, chỉ hiện danh sách chọn nhanh khi đã có bộ lưu. Sửa đồng bộ cách gộp khi nạp cài đặt, kiểm tra lại hiển thị các chế độ và giữ nguyên dữ liệu khách.

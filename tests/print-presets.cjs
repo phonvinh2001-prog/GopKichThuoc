@@ -13,7 +13,11 @@ assert.throws(()=>run('storage.saveProductionPreset("Lỗi",{...c,fixedLength:0}
 run('globalThis.app=new App();app.items=items;app.stocks=[{length:4000,quantity:1}];app.currentResult=r;app.notify=()=>{};app.persist=()=>true;');
 get('productionPreset').value='Nhôm 6m';run('app.applyProductionPreset()');assert.equal(run('app.config.kerf'),3);assert.equal(run('app.config.fixedLength'),6000);assert.equal(run('app.currentResult'),null);assert.equal(run('app.items.length'),3);assert.equal(run('app.stocks[0].length'),4000);assert.equal(get('fixedLengthField').hidden,false);
 run('app.currentResult=r;app.printResults()');assert.equal(ctx.printCount,1);assert(get('printReport').innerHTML.includes('KÍCH THƯỚC KHÁCH YÊU CẦU'));
+run('storage.saveProductionPreset("Tận dụng",{...c,productionMode:"material",stockMode:"custom",kerf:2,mergeTolerance:7})');
+get('productionPreset').value='Tận dụng';run('app.applyProductionPreset()');assert.equal(get('productionMode').value,'material');assert.equal(get('maxTypesField').hidden,true);assert.equal(get('customOrderFields').hidden,false);assert(get('advancedSettingsSummary').textContent.includes('Mạch cắt 2 mm'));assert.equal(run('app.items.length'),3);
+run('app.refreshProductionPresets()');assert.equal(get('savedSettingsBox').hidden,false);
 data.set('cutting_opt_production_presets','broken');assert.equal(run('storage.getProductionPresets().length'),0);
+run('app.refreshProductionPresets()');assert.equal(get('savedSettingsBox').hidden,true);
 ctx.localStorage.setItem=()=>{throw Error('Quota');};assert.throws(()=>run('storage.saveProductionPreset("Lỗi lưu",c)'));
 assert.match(fs.readFileSync('src/css/print-report.css','utf8'),/body>\.container\{display:none!important\}/);
 assert.match(fs.readFileSync('src/css/print-report.css','utf8'),/size:A4 portrait/);

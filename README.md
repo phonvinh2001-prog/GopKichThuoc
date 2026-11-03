@@ -1,6 +1,6 @@
 # GopKichThuoc — Lập kế hoạch phôi và phiếu cắt
 
-Phiên bản 1.8.0. Gộp kích thước nhỏ khách đặt thành phôi thuận tiện cho nhà máy, sau đó lập mẫu cắt lặp cho thợ.
+Phiên bản 1.9.0. Gộp kích thước nhỏ khách đặt thành phôi thuận tiện cho nhà máy, sau đó lập mẫu cắt lặp cho thợ.
 
 ## Chạy ứng dụng
 
@@ -59,3 +59,6 @@ Cảnh báo dùng cùng mã mẫu A01… với phiếu cắt và Excel; nhấn m
 Phiếu in A4 riêng gồm bảng đầu vào, bảng đặt phôi, cảnh báo theo mẫu và hướng dẫn cắt. Chữ đen, bảng có viền và sơ đồ SVG không phụ thuộc tùy chọn in nền. Khi in, trang nhập và giao diện màn hình được ẩn. Tắt Đầu trang/chân trang trong hộp thoại trình duyệt nếu không muốn URL/ngày tự động. Bố cục và nội dung có kiểm tra bằng mã; chưa xác nhận ảnh PDF thực tế trong môi trường hiện tại.
 
 Cài đặt sản xuất đã lưu: nhập tên rồi Lưu / cập nhật. Lần sau chọn tên và Áp dụng; dùng lại tên cũ để cập nhật. Chỉ lưu thông số sản xuất, không lưu kích thước khách. Cài đặt lưu trên trình duyệt hiện tại và cùng địa chỉ ứng dụng, chưa đồng bộ sang máy khác. Áp dụng sẽ yêu cầu tính lại.
+
+## Thiết lập gọn 1.9
+Chỉ hiện thông số chính của chế độ đang chọn: phôi cố định có chiều dài và giới hạn loại chi tiết/mẫu; đặt riêng hoặc theo khoảng có Min–Max và giới hạn loại chi tiết/mẫu. Các thông số máy, dự phòng, làm tròn, gộp phôi, bước phôi, mục tiêu loại phôi và ngưỡng cảnh báo nằm trong Tùy chỉnh nâng cao (mặc định đóng). Dòng tóm tắt hiển thị giá trị đang dùng. Trường không áp dụng bị ẩn và vô hiệu hóa, không bị xóa giá trị. Có thể lưu/cập nhật tên bộ cài đặt ở mục riêng cuối phần thiết lập; danh sách chọn nhanh chỉ hiện khi đã có bộ lưu. Nạp lại bộ cài đặt đồng bộ cả cách gộp, hiển thị và thông số tóm tắt.
