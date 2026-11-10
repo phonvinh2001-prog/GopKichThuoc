@@ -18,6 +18,6 @@ get('stockMode').value='custom';get('kerf').value='3';get('endAllowance').value=
 get('productionMode').value='material';vm.runInContext('syncStockModeUI()',ctx);assert.equal(get('maxTypesField').hidden,true);
 assert(get('advancedSettingsSummary').textContent.includes('Mạch cắt 3 mm'));assert(get('advancedSettingsSummary').textContent.includes('Dự phòng 10 mm'));assert(get('advancedSettingsSummary').textContent.includes('Gộp ≤ 8 mm'));
 get('productionMode').value='simple';vm.runInContext('syncStockModeUI()',ctx);assert.equal(get('maxTypesField').hidden,false);
-assert.equal(get('maxStockTypesLabel').textContent,'Mục tiêu số loại phôi');get('stockMode').value='standard';vm.runInContext('syncStockModeUI()',ctx);assert.equal(get('maxStockTypesLabel').textContent,'Tối đa số loại phôi');
+assert.equal(get('maxStockTypesLabel').textContent,'Tối đa số loại phôi');get('stockMode').value='standard';vm.runInContext('syncStockModeUI()',ctx);assert.equal(get('maxStockTypesLabel').textContent,'Tối đa số loại phôi');
 assert.match(fs.readFileSync('src/css/workspace.css','utf8'),/\[hidden\]\s*\{\s*display:\s*none\s*!important\s*;/);
 console.log('PASS: switching all 3 modes, fixed field visibility, disabled controls, saved value, CSS hidden precedence');

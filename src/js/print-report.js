@@ -16,8 +16,8 @@ function buildPrintReport(result,items){
   ${result.summary.some(s=>s.isExisting)?`<h3>Thanh lấy từ tồn kho</h3>${printTable(['Chiều dài (mm)','Số thanh'],result.summary.filter(s=>s.isExisting).map(s=>[mm(s.length),s.quantity]))}`:''}
   <p class="print-config">Mạch cắt giữa các đoạn: <b>${mm(result.config.kerf)} mm</b>. Dự phòng/phôi mới: <b>${mm(result.config.stockMode==='standard'?0:result.config.endAllowance||0)} mm</b>. Ngưỡng cảnh báo dư: <b>${mm(result.config.maxWaste)} mm/thanh</b>.</p>
   ${warnings.length?`<h3>Các mẫu cần kiểm tra đoạn dư</h3>${printTable(['Mẫu','Số thanh','Dư / thanh (mm)','Dư (% phôi)'],warnings.map(w=>[w.patternId,w.count,mm(w.remaining),w.percent.toFixed(1)+'%']))}`:'<p>Không có mẫu vượt ngưỡng cảnh báo dư.</p>'}
-  <section class="print-patterns"><h2>3. HƯỚNG DẪN CẮT TẠI XƯỞNG</h2><p>Lặp đúng số thanh ghi trên từng mẫu. Bảng “mỗi thanh” là số chi tiết cần cắt từ một phôi.</p>
-  ${result.patterns.map(p=>`<article class="print-pattern"><div class="print-pattern-title"><h3>${p.id} · PHÔI ${mm(p.length)} mm</h3><strong>LẶP ${p.count} THANH</strong></div><p class="print-recipe">${patternRecipe(p.cuts).map(([l,n])=>`${mm(l)} mm × ${n}`).join(' + ')}</p>${printCutBar(p)}${printTable(['Chiều dài (mm)','Chi tiết / mỗi thanh','Chi tiết / cả mẫu'],patternRecipe(p.cuts).map(([l,n])=>[mm(l),n,n*p.count]))}<div class="print-pattern-footer"><span>${p.isExisting?'Nguồn: tồn kho':'Nguồn: đặt mới'}</span><span>Dư / thanh: <b>${mm(p.remaining)} mm</b></span><span>Dự phòng: ${mm(p.allowance||0)} mm</span></div></article>`).join('')}</section>`;
+  <section class="print-patterns"><h2>3. HƯỚNG DẪN CẮT TẠI XƯỞNG</h2>
+  ${result.patterns.map(p=>`<article class="print-pattern"><div class="print-pattern-title"><h3>${p.id} · PHÔI ${mm(p.length)} mm</h3><strong>LẶP ${p.count} THANH</strong></div><p class="print-recipe">${patternRecipe(p.cuts).map(([l,n])=>`${mm(l)} mm × ${n}`).join(' + ')}</p>${printCutBar(p)}<div class="print-pattern-remainder">Dư / thanh: <b>${mm(p.remaining)} mm</b></div></article>`).join('')}</section>`;
 }
 App.prototype.preparePrintReport=function(){
   const target=document.getElementById('printReport');

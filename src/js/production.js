@@ -17,7 +17,7 @@ function patternWarnings(result,config){
     message:`${p.id}: ${p.count} thanh, dư ${p.remaining} mm/thanh.`
   }));
   const types=new Set(result.stocks.filter(s=>!s.isExisting).map(s=>s.length)).size;
-  if(config.stockMode==='custom'&&types>config.maxStockTypes)warnings.push({type:'info',message:`${types} loại phôi; mục tiêu ${config.maxStockTypes}.`});
+  if(config.stockMode==='custom'&&types>config.maxStockTypes)warnings.push({type:'info',message:`${types} loại phôi; giới hạn ${config.maxStockTypes}.`});
   return warnings;
 }
 // Warnings are computed only after the final pattern IDs and totals exist.

@@ -18,7 +18,7 @@ Nếu có Node.js và npm: npm install rồi npm run dev. Kiểm tra logic khôn
 
 ## Ba cách cấp phôi
 
-- Đặt theo mẫu ghép (mặc định): tạo mẫu cùng chiều dài lặp nhiều, xử lý phần lẻ, tính chiều dài đặt từ mẫu. Có dư gia công/phôi, làm tròn lên, gộp các chiều dài gần nhau lên chiều dài lớn hơn. Mục tiêu số loại phôi chỉ cảnh báo, không ép tăng dư.
+- Đặt theo mẫu ghép (mặc định): ghép chi tiết vào phôi dài nhất trước, giới hạn 1–3 kích thước chi tiết trong mỗi mẫu khi chọn chế độ dễ cắt. Chỉ bổ sung chiều dài đặt hàng ngắn hơn khi giúp nhiều thanh giảm dư; tổng số chiều dài không vượt giới hạn đã chọn. Bước hoán đổi chi tiết giữa các thanh xử lý mẫu lẻ mà không thêm loại phôi. Có thể khai báo dư gia công và bước làm tròn chiều dài đặt.
 - Phôi cố định: nhập duy nhất chiều dài (ví dụ 6000 mm). Mọi phôi mới giữ đúng chiều dài đó; trừ dự phòng gia công trước khi xếp. Không sử dụng Min/Max/bước phôi.
 - Phôi theo khoảng: thử lưới Min–Max/bước, giới hạn số loại phôi mới, rút phôi về kích thước khả dụng trên lưới. Không áp dụng dự phòng/làm tròn/gộp của chế độ đặt riêng.
 

@@ -96,11 +96,11 @@ function syncStockModeUI(){
   document.getElementById('stepSizeField').hidden=mode!=='standard';
   document.getElementById('maxStockTypesField').hidden=fixed;
   document.getElementById('stockTypeHint').hidden=fixed;
-  document.getElementById('maxStockTypesLabel').textContent=custom?'Mục tiêu số loại phôi':'Tối đa số loại phôi';
-  document.getElementById('stockTypeHint').textContent=custom?'Chỉ cảnh báo khi vượt mục tiêu; không ép tăng dư.':'Giới hạn số chiều dài phôi mới được sử dụng.';
+  document.getElementById('maxStockTypesLabel').textContent='Tối đa số loại phôi';
+  document.getElementById('stockTypeHint').textContent=custom?'Chỉ thêm chiều dài đặt hàng khi giảm dư cho nhiều thanh; không vượt quá giới hạn đã chọn.':'Giới hạn số chiều dài phôi mới được sử dụng.';
   const simple=document.getElementById('productionMode').value!=='material';
   document.getElementById('maxTypesField').hidden=!simple;document.getElementById('maxTypes').disabled=!simple;
-  document.getElementById('modeHint').textContent=(fixed?'Phôi mới giữ đúng chiều dài đã nhập.':custom?'Tính chiều dài đặt từ các mẫu ghép trong giới hạn phôi.':'Chọn phôi theo khoảng và bước chiều dài.')+(!simple?' Không giới hạn loại chi tiết trong mỗi mẫu.':'');
+  document.getElementById('modeHint').textContent=(fixed?'Phôi mới giữ đúng chiều dài đã nhập.':custom?'Ưu tiên ít chiều dài đặt hàng; mỗi mẫu ghép tối đa số kích thước chi tiết đã chọn.':'Chọn phôi theo khoảng và bước chiều dài.')+(!simple?' Không giới hạn loại chi tiết trong mỗi mẫu.':'');
   const number=id=>{const raw=document.getElementById(id).value;return raw!==''&&Number.isFinite(Number(raw))?Number(raw).toLocaleString('vi-VN'):'chưa nhập';};
   const extra=[`Mạch cắt ${number('kerf')} mm`];
   if(mode!=='standard')extra.push(`Dự phòng ${number('endAllowance')} mm`);

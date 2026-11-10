@@ -4,7 +4,10 @@ const ctx={window:{addEventListener(){},print(){ctx.printCount=(ctx.printCount||
 for(const f of ['optimizer','storage','export','app','production','custom-stock','workspace','entry-grid','results-view','print-report','production-presets'])vm.runInContext(fs.readFileSync(`src/js/${f}.js`,'utf8'),ctx);
 const run=s=>vm.runInContext(s,ctx);
 run(`globalThis.c={stockMode:'fixed',productionMode:'simple',fixedLength:6000,minLength:2000,maxLength:6000,stepSize:100,maxTypes:2,maxStockTypes:3,kerf:5,maxWaste:500,endAllowance:10,orderIncrement:1,mergeTolerance:0};globalThis.items=[{length:2300,quantity:2},{length:2300,quantity:1},{length:1130,quantity:2}];globalThis.r=new CuttingOptimizer().optimize(items,c);globalThis.html=buildPrintReport(r,[]);`);
-const html=run('html');assert(html.includes('KÍCH THƯỚC KHÁCH YÊU CẦU'));assert(html.includes('ĐẶT PHÔI NHÀ MÁY'));assert(html.includes('HƯỚNG DẪN CẮT'));assert(html.includes('Chi tiết / mỗi thanh'));assert(html.includes('Chi tiết / cả mẫu'));assert(html.includes('<svg'));assert(html.includes('stroke="black"'));
+const html=run('html');assert(html.includes('KÍCH THƯỚC KHÁCH YÊU CẦU'));assert(html.includes('ĐẶT PHÔI NHÀ MÁY'));assert(html.includes('HƯỚNG DẪN CẮT'));assert(html.includes('<svg'));assert(html.includes('stroke="black"'));
+const guidance=html.slice(html.indexOf('<section class="print-patterns">'));
+assert(guidance.includes('PHÔI 6.000 mm'));assert(guidance.includes('LẶP '));assert(guidance.includes('2.300 mm × '));assert(guidance.includes('Dư / thanh:'));
+for(const redundant of ['<table>','Chi tiết / mỗi thanh','Chi tiết / cả mẫu','Nguồn:','Dự phòng:','Lặp đúng số thanh'])assert(!guidance.includes(redundant));
 // Input snapshot is included even if the caller passes an empty current list.
 assert(html.includes('<td>2.300</td><td>3</td>'));for(const p of run('r.patterns'))assert(html.includes(p.id));
 run('globalThis.storage=new StorageManager();storage.saveProductionPreset("Nhôm 6m",c)');assert.equal(run('storage.getProductionPresets().length'),1);

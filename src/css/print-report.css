@@ -18,12 +18,11 @@
   #printReport thead{display:table-header-group}#printReport tr{break-inside:avoid;page-break-inside:avoid}
   #printReport .print-config{border-left:2pt solid #000;padding-left:8pt;font-size:9pt}
   #printReport .print-patterns{break-before:page;page-break-before:always}
-  #printReport .print-pattern{break-inside:avoid;page-break-inside:avoid;border:1pt solid #000;padding:10pt;margin:0 0 12pt}
+  #printReport .print-pattern{break-inside:avoid;page-break-inside:avoid;border:1pt solid #000;padding:9pt;margin:0 0 9pt}
   #printReport .print-pattern-title{display:flex;justify-content:space-between;gap:10pt;align-items:center;border-bottom:1pt solid #000;padding-bottom:7pt}
   #printReport .print-pattern-title h3{font-size:12pt;margin:0}
   #printReport .print-pattern-title strong{font-size:12pt;white-space:nowrap}
-  #printReport .print-recipe{font-size:13pt;font-weight:700;margin:10pt 0}
-  #printReport .print-bar{width:100%;height:auto;max-height:32pt;display:block;margin:8pt 0}
-  #printReport .print-pattern-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6pt;font-size:9pt;border-top:.7pt solid #555;padding-top:6pt}
-  #printReport .print-pattern table{margin-bottom:8pt}
+  #printReport .print-recipe{font-size:13pt;font-weight:700;margin:8pt 0}
+  #printReport .print-bar{width:100%;height:auto;max-height:32pt;display:block;margin:6pt 0}
+  #printReport .print-pattern-remainder{text-align:right;font-size:10pt;border-top:.7pt solid #555;padding-top:5pt}
 }
